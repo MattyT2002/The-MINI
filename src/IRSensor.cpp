@@ -21,5 +21,5 @@ int IR_sensor::read(){
     // Read the distance date from the sensor
     i2c.read(_IR_addr, _cmd, 2);
     _decArray[0] = _cmd[0], _cmd[1];
-    return((_decArray[0] * 0.25));
+    return((_decArray[0] * 0.21));
 }

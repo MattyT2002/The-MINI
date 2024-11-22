@@ -2,29 +2,36 @@
 #include "mbed.h"
 using namespace mbed;
 
+Encoder::Encoder(PinName pinA, PinName pinB)
+    : _pinA(pinA), _pinB(pinB){
 
-
-void Encoder::countPulseA(){
-    _EncCountA++;
-    if(_EncCountA%6 == 0){
-        if(_EncCountA%100 == 0){
-            _ShaftRevA++;
-        }
     }
+
+void Encoder::setup(){
+    _pinA.rise(callback(this, &Encoder::updateEnCount));
+    
 }
 
-void Encoder::countPulseB(){
-    _EncCountB++;
-    if(_EncCountB%6 == 0){
-        if(_EncCountB%100 == 0){
-            _ShaftRevB++;
-        }
+void Encoder::updateEnCount(){
+    
+    if(_pinA != _pinB){
+        _EnCount++;
     }
+    else{
+        _EnCount--;
+    }
+
 }
 
 void Encoder::reset(){
-    _EncCountA = 0;
-    _EncCountB = 0;
-    _ShaftRevA = 0;
-    _ShaftRevB = 0;
+    _EnCount = 0;
+}
+
+int Encoder:: print(){
+    Serial.println(_EnCount);
+}
+
+float Encoder:: getDistance(){
+    //returns distance wheel has spin in millimetres.
+    return((_EnCount * DISTANCE_PER_TICK)*4);
 }

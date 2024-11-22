@@ -3,6 +3,8 @@
 #include "mbed.h"
 using namespace mbed;
 #include "MotorControl.h"
+#include "Encoder.h"
+
 
 Motor::Motor(PinName PwmPin, PinName dirPin)
     : _PwmPin(PwmPin), _dirPin(dirPin){}
@@ -20,4 +22,5 @@ void Motor::move(int dir, float speed){
     _dirPin.write(dir);
     _PwmPin.write(speed);
 }
+
 

@@ -41,7 +41,12 @@ MovementControl::MovementControl(Motor& leftMotor, Motor& rightMotor)
 
     void MovementControl::forward(float distance){
         Thread leftWheelThread, RightWheelThread;
+         leftEncoder.reset();
+         rightEncoder.reset();
         
+        leftMotor.setMotorVel(100);
+        rightMotor.setMotorVel(100);
+
         leftWheelThread.start(callback([&](){
             _leftMotor.move(Left_Forward, _pwr);
         }));

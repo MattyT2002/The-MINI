@@ -22,19 +22,29 @@ class Motor{
     void setup();
     void stop();
     void move(int dir, float speed);
+    void PID();
+    void calCurrentVel(); 
+    void setMotorVel(float targetVel);
   private:
     PwmOut _PwmPin;
     DigitalOut _dirPin;
+
+    Ticker _PIDTicker;
+    Ticker _velTicker;
+
     float _kp; //protportional gain
     float _ki; //integral gain 
     float _kd; //derivative gain
-    float _prevErrror;
+    float _prevError;
     float _integral; 
-    float _targetSpeed;
-
+    float _targetVel;
+    float _currentVel;
+  
 };
   extern Motor leftMotor;
   extern Motor rightMotor;
+  extern Encoder _encoder;
+
 
 #endif
  

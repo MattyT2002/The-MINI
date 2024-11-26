@@ -11,14 +11,12 @@
 #define Right_Motor_PWM P0_27
 #define Right_Motor_dir P0_5
 #define Default_pwm 0.5f
-#define kp 0.5
-#define ki 0.1 
-#define kd 0.05
+
 
 using namespace mbed;
 class Motor{
   public:
-    Motor(PinName PwmPin, PinName dirPin);
+    Motor(PinName PwmPin, PinName dirPin, Encoder &encoder);
     void setup();
     void stop();
     void move(int dir, float speed);
@@ -26,25 +24,24 @@ class Motor{
     void calCurrentVel(); 
     void setMotorVel(float targetVel);
   private:
+    Encoder &_encoder;
     PwmOut _PwmPin;
     DigitalOut _dirPin;
-
+    float _currentVel;
     Ticker _PIDTicker;
-    Ticker _velTicker;
-
+    Ticker _velTicker; 
     float _kp; //protportional gain
     float _ki; //integral gain 
     float _kd; //derivative gain
     float _prevError;
     float _integral; 
     float _targetVel;
-    float _currentVel;
-  
+    float _prevEncoderDist;
+    
 };
   extern Motor leftMotor;
   extern Motor rightMotor;
-  extern Encoder _encoder;
-
+ 
 
 #endif
  

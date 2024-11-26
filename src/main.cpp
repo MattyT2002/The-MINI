@@ -11,9 +11,8 @@ IR_sensor IRFrontRight(FRONT_RIGHT);
 IR_sensor IRSideRight(SIDE_RIGHT);
 IR_sensor IRSideLeft(SIDE_LEFT);
 
-Motor leftMotor(Left_Motor_PWM, Left_Motor_dir);
-Motor rightMotor(Right_Motor_PWM, Right_Motor_dir);
-MovementControl movementControl(leftMotor, rightMotor);
+
+
 
 
 
@@ -52,13 +51,10 @@ void loop()
     Serial.println(SideRight);
     
     */
-    wait_us(5000000);
+    wait_us(3000000);
     movementControl.forward(100);
     wait_us(3000000);
     movementControl.reverse(100);
-    wait_us(3000000);
+    wait_us(2000000);
     movementControl.turnLeft(90);
-    wait_us(3000000);
-    movementControl.turnRight(90);
-   
-};
+}

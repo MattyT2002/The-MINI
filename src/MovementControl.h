@@ -22,12 +22,14 @@ class MovementControl{
         void reverse(float distance);
         void turnLeft(int degrees);
         void turnRight(int degrees);
-        
-    private:
+        void setVelocity(int velocity);
+        void forwardTest();
+        private:
         float getacrlength(float degrees);
         Motor &_leftMotor;
         Motor &_rightMotor;
         float _pwr;
+        void encoderTraker();
 };
 
 extern MovementControl movementControl;

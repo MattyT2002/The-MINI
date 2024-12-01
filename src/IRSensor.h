@@ -8,19 +8,18 @@ using namespace mbed;
 #define FRONT_RIGHT 0x01
 #define SIDE_RIGHT 0x04
 #define SIDE_LEFT 0x03
-class IR_sensor{
-    public:
+class IR_sensor
+{
+public:
     IR_sensor(char mux_cmd);
-    int read();
+    float read();
 
-    private:
+private:
     char _cmd[2];
     const char _mux_addr = 0xEE;
     char _mux_cmd;
     const char _IR_addr = 0x80;
     float _decArray[1];
-    
-
 };
 
 extern IR_sensor ir;

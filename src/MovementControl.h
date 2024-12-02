@@ -1,5 +1,5 @@
-#ifndef MovementControl_h
-#define MotorController_h
+#ifndef MOVEMENTCONTROL_H
+#define MOVEMENTCONTROL_H
 #include "Arduino.h"
 #include "MotorControl.h"
 #include "mbed.h"
@@ -13,8 +13,8 @@ using namespace mbed;
 #define pi 3.14
 #define center_to_wheel 45
 #define proportionalResponse 0.07
-#define tolerance 0.2
-#define alignSpeed 0.1
+#define tolerance 1
+#define alignSpeed 0.15
 class MovementControl
 {
 public:
@@ -26,6 +26,7 @@ public:
     void turnLeft(int degrees);
     void turnRight(int degrees);
     void alignToWall();
+    void wallFollow(float wallDistance, float moveDistance);
 
 private:
     float getacrlength(float degrees);

@@ -28,22 +28,7 @@ void Motor::move(int dir, float speed)
     _PwmPin.write(speed);
 }
 
-void Motor::PID()
-{
-    float error = _targetVel - _currentVel;     // Calculate the velocity error
-    float Pout = _kp * error;                   // Proportional output
-    float output = constrain(Pout, 0.0f, 1.0f); // Ensure PWM is within [0, 1]
 
-    Serial.print("TargetVel: ");
-    Serial.print(_targetVel);
-    Serial.print(" | CurrentVel: ");
-    Serial.print(_currentVel);
-    Serial.print(" | Output: ");
-    Serial.println(output);
-
-    _PwmPin.write(output); // Update motor PWM
-    _prevError = error;    // Update previous error
-}
 
 void Motor::calCurrentVel()
 {

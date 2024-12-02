@@ -4,13 +4,10 @@
 #include "IRSensor.h"
 #include "mbed.h"
 #include "Encoder.h"
+#include "WallFollowing.h"
 using namespace mbed;
 
 
-IR_sensor IRSideRight(SIDE_RIGHT);
-IR_sensor IRSideLeft(SIDE_LEFT);
-IR_sensor FrontRight(FRONT_RIGHT);
-IR_sensor FrontLeft(FRONT_LEFT);
 
 int count = 0;
 
@@ -23,6 +20,7 @@ void setup()
 }
 void loop()
 {
+    movementControl.wallFollow(20,150);
     /*
     while (true)
     {
@@ -44,9 +42,20 @@ void loop()
     movementControl.reverse(100);
     wait_us(2000000);
     movementControl.turnLeft(90);
-    */
+    
     wait_us(3000000);
-    movementControl.turnLeft(90);
-    wait_us(1000000);
+    movementControl.forward(300);
     movementControl.alignToWall();
+    movementControl.turnLeft(90);
+    movementControl.alignToWall();
+    wait_us(500000);
+    movementControl.turnLeft(90);
+    movementControl.alignToWall();
+    wait_us(500000);
+    movementControl.turnRight(90);
+    movementControl.alignToWall();
+    wait_us(500000);
+    movementControl.turnRight(90);
+    movementControl.alignToWall();
+*/
 }

@@ -5,6 +5,7 @@
 #include "rtos.h"
 #include "Encoder.h"
 #include "IRSensor.h"
+#include "WallFollowing.h"
 
 Encoder rightEncoder(RIGHT_ENCODER_A, RIGHT_ENCODER_B);
 Encoder leftEncoder(LEFT_ENCODER_A, LEFT_ENCODER_B);
@@ -14,9 +15,12 @@ Motor rightMotor(Right_Motor_PWM, Right_Motor_dir, rightEncoder);
 
 MovementControl movementControl(leftMotor, rightMotor);
 
-
-IR_sensor IRFrontLeft(FRONT_LEFT);
+IR_sensor IRSideRight(SIDE_RIGHT);
+IR_sensor IRSideLeft(SIDE_LEFT);
 IR_sensor IRFrontRight(FRONT_RIGHT);
+IR_sensor IRFrontLeft(FRONT_LEFT);
+
+WallFollowing wallFollower(movementControl, IRSideLeft, IRSideRight, IRFrontLeft, IRFrontRight);
 
 using namespace rtos;
 using namespace mbed;
@@ -61,26 +65,26 @@ void MovementControl::forward(float distance)
         float distanceError = leftDist - rightDist;
 
         // Apply a small proportional correction to the motors
-        float correction = proportionalResponse * distanceError; 
+        float correction = proportionalResponse * distanceError;
         float leftSpeed = Default_pwm - correction;
         float rightSpeed = Default_pwm + correction;
 
         // Constrain PWM values to valid range [0.0, 1.0]
         leftSpeed = constrain(leftSpeed, 0.0f, 1.0f);
         rightSpeed = constrain(rightSpeed, 0.0f, 1.0f);
-        Serial.println(leftSpeed);
+        
         // Update motor speeds
         _leftMotor.move(Left_Forward, leftSpeed);
         _rightMotor.move(Right_Forward, rightSpeed);
 
-        // Debugging information
+        /* Debugging information
         Serial.print("Left Dist: ");
         Serial.print(leftDist);
         Serial.print(" | Right Dist: ");
         Serial.print(rightDist);
         Serial.print(" | Correction: ");
         Serial.println(correction);
-
+        */
         ThisThread::sleep_for(10); // Allow time for adjustment
     }
     movementControl.stop();
@@ -103,21 +107,22 @@ void MovementControl::reverse(float distance)
         float distanceError = leftDist - rightDist;
 
         // Apply a small proportional correction to the motors
-        float correction = proportionalResponse * distanceError; 
+        float correction = proportionalResponse * distanceError;
         float leftSpeed = Default_pwm + correction;
         float rightSpeed = Default_pwm - correction;
 
         // Constrain PWM values to valid range [0.0, 1.0]
         leftSpeed = constrain(leftSpeed, 0.0f, 1.0f);
-        rightSpeed = constrain(rightSpeed, 0.0f, 1.0f);
-
-        // Debugging information
+        rightSpeed = constrain(rightSpeed, 0.0f, 1.0f); 
+        
+        /* Debugging information
         Serial.print("Left Dist: ");
         Serial.print(leftDist);
         Serial.print(" | Right Dist: ");
         Serial.print(rightDist);
         Serial.print(" | Correction: ");
         Serial.println(correction);
+        */
 
         // Update motor speeds
         _leftMotor.move(Left_Backwards, leftSpeed);
@@ -151,7 +156,7 @@ void MovementControl::turnLeft(int degrees)
         float distanceError = leftDist + rightDist; // Sum since one is negative
 
         // Apply a small proportional correction to the motors
-        float correction = proportionalResponse * distanceError; 
+        float correction = proportionalResponse * distanceError;
         float leftSpeed = Default_pwm + correction;
         float rightSpeed = Default_pwm - correction;
 
@@ -159,13 +164,14 @@ void MovementControl::turnLeft(int degrees)
         leftSpeed = constrain(leftSpeed, 0.0f, 1.0f);
         rightSpeed = constrain(rightSpeed, 0.0f, 1.0f);
 
-        // Debugging information
+        /* Debugging information
         Serial.print("Left Dist: ");
         Serial.print(leftDist);
         Serial.print(" | Right Dist: ");
         Serial.print(rightDist);
         Serial.print(" | Correction: ");
         Serial.println(correction);
+        */
 
         // Update motor speeds
         _leftMotor.move(Left_Forward, leftSpeed);
@@ -199,21 +205,22 @@ void MovementControl::turnRight(int degrees)
         float distanceError = leftDist + rightDist; // Sum since one is negative
 
         // Apply a small proportional correction to the motors
-        float correction = proportionalResponse * distanceError; 
+        float correction = proportionalResponse * distanceError;
         float leftSpeed = Default_pwm - correction;
         float rightSpeed = Default_pwm + correction;
 
         // Constrain PWM values to valid range [0.0, 1.0]
         leftSpeed = constrain(leftSpeed, 0.0f, 1.0f);
         rightSpeed = constrain(rightSpeed, 0.0f, 1.0f);
-
-        // Debugging information
+        
+        /* Debugging information
         Serial.print("Left Dist: ");
         Serial.print(leftDist);
         Serial.print(" | Right Dist: ");
         Serial.print(rightDist);
         Serial.print(" | Correction: ");
         Serial.println(correction);
+        */
 
         // Update motor speeds
         _leftMotor.move(Left_Backwards, leftSpeed);
@@ -232,26 +239,29 @@ float MovementControl::getacrlength(float degrees)
 
 void MovementControl::alignToWall()
 {
-    while(true)
+    while (true)
     {
         float leftDistance = IRFrontLeft.read();
         float rightDistance = IRFrontRight.read();
         float distanceError = leftDistance - rightDistance;
-        // Debugging information
-        Serial.print("Left Distance: ");
-        Serial.print(leftDistance);
-        Serial.print(" | Right Distance: ");
-        Serial.print(rightDistance);
-        Serial.print(" | Distance Error: ");
-        Serial.println(distanceError);
 
-        if(abs(distanceError) <= tolerance)
+        if(leftDistance > 25 && rightDistance > 25);
+         /* Debugging information
+        Serial.print("Left Dist: ");
+        Serial.print(leftDist);
+        Serial.print(" | Right Dist: ");
+        Serial.print(rightDist);
+        Serial.print(" | Correction: ");
+        Serial.println(correction);
+        */
+
+        if (abs(distanceError) <= tolerance)
         {
             movementControl.stop();
-            break; //aligment done
+            break; // aligment done
         }
 
-          if (distanceError > 0)
+        if (distanceError > 0)
         {
             // If left sensor reads further, turn right slightly
             _leftMotor.move(Left_Backwards, alignSpeed);
@@ -263,11 +273,12 @@ void MovementControl::alignToWall()
             _leftMotor.move(Left_Forward, alignSpeed);
             _rightMotor.move(Right_Backwards, alignSpeed);
         }
-         // Add a delay for stability
+        // Add a delay for stability
         ThisThread::sleep_for(10);
-
-        
     }
-
 }
-    
+
+void MovementControl::wallFollow(float wallDistance, float moveDistance)
+{
+    wallFollower.followLeftWall(wallDistance, moveDistance);
+}

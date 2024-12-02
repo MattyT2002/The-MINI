@@ -20,7 +20,7 @@ public:
   void setup();
   void stop();
   void move(int dir, float speed);
-  void PID();
+
   void calCurrentVel();
   void setMotorVel(float targetVel);
 

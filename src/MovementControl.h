@@ -13,7 +13,7 @@ using namespace mbed;
 #define pi 3.14
 #define center_to_wheel 45
 #define proportionalResponse 0.07
-#define tolerance 1
+#define tolerance 10
 #define alignSpeed 0.15
 class MovementControl
 {

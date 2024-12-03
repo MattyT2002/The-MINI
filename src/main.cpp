@@ -20,7 +20,8 @@ void setup()
 }
 void loop()
 {
-    movementControl.wallFollow(20,150);
+    wait_us(2000000);
+    movementControl.wallFollow(200,150);
     /*
     while (true)
     {

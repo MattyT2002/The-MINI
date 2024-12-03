@@ -239,13 +239,18 @@ float MovementControl::getacrlength(float degrees)
 
 void MovementControl::alignToWall()
 {
+    
+   
     while (true)
     {
         float leftDistance = IRFrontLeft.read();
         float rightDistance = IRFrontRight.read();
         float distanceError = leftDistance - rightDistance;
-
-        if(leftDistance > 25 && rightDistance > 25);
+         if(leftDistance > 300 || rightDistance > 300){
+            Serial.println("wall to far aware");
+            break;
+        }
+        
          /* Debugging information
         Serial.print("Left Dist: ");
         Serial.print(leftDist);

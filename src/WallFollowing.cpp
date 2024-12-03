@@ -67,60 +67,77 @@ void WallFollowing::moveAwayFromWall(float moveDistance)
 // Main wall-following logic
 void WallFollowing::followLeftWall(float setDistance, float moveDistance)
 {
-     
-    
+    int heading = 0; // Initial heading is 0° (forward direction)
+
     while (true)
     {
         Serial.println("----- Begin Loop -----");
-        // Align to the left wall if within 15 cm
-        float leftSideDistance = _leftSideIR.read();
-        Serial.print("Left Side Sensor (Alignment Check): ");
-        Serial.println(leftSideDistance);
 
+        // Read sensor distances
+        float frontRight = _frontRightIR.read();
+        float frontLeft = _frontLeftIR.read();
+        float left = _leftSideIR.read();
+        float right = _rightSideIR.read();
 
-        // Check if the robot is too close to the wall
-        if (isTooCloseToWall(setDistance))
+        // Log sensor readings for debugging
+        Serial.print("Front Right: ");
+        Serial.println(frontRight);
+        Serial.print("Front Left: ");
+        Serial.println(frontLeft);
+        Serial.print("Left: ");
+        Serial.println(left);
+        Serial.print("Right: ");
+        Serial.println(right);
+        Serial.print("Current Heading: ");
+        Serial.println(heading);
+
+        // Prioritize moving forward in the initial direction
+        if (canMoveForward(moveDistance) && heading == 0)
         {
-            moveAwayFromWall(moveDistance); // Create space from the wall
+            Serial.println("Path clear forward and maintaining initial heading. Moving forward...");
+            _movement.forward(moveDistance);
         }
-        // Check if the robot can turn left
-        else if (canMoveForward(setDistance))
+        // Check for left opening if forward is blocked
+        else if (left > setDistance)
+        {
+            if(canMoveForward(moveDistance/2)){
+                _movement.forward(moveDistance/2);
+            }
+            Serial.println("Left opening detected. Turning left...");
+            _movement.turnLeft(90);
+            heading = (heading - 90 + 360) % 360; // Update heading (keep in range 0-359)
+            alignToWall();
+        }
+        // Check for front wall
+        else if (frontLeft < setDistance || frontRight < setDistance)
+        {
+            // Check for right opening
+            if (right > setDistance)
+            {
+                Serial.println("Right opening detected. Turning right...");
+                _movement.turnRight(90);
+                heading = (heading + 90) % 360; // Update heading
+                alignToWall();
+            }
+            else
+            {
+                Serial.println("No openings detected. Turning around...");
+                _movement.turnRight(180);
+                heading = (heading + 180) % 360; // Update heading
+                alignToWall();
+            }
+        }
+        // If no walls or openings are detected, move forward
+        else if (canMoveForward(moveDistance))
         {
             Serial.println("Path clear forward. Moving forward...");
-            _movement.forward(moveDistance); // Move forward by the specified distance
-            Serial.println("Moved forward.");
+            _movement.forward(moveDistance);
         }
-        if (canTurnLeft(setDistance))
-        {
-            if (canMoveForward(setDistance))
-            {
-                _movement.forward(moveDistance); 
-            }
-            Serial.println("Space detected on the left. Turning left...");
-            _movement.turnLeft(90); // Turn left 90 degrees
-            Serial.println("Turned left 90 degrees.");
-            alignToWall(); // Align after turning
-
-        
-        }
-        // Check if the robot can move forward
-        
-        // If left and forward are blocked, turn right
         else
         {
-            Serial.println("Left and forward paths blocked. Turning right...");
-            _movement.turnRight(90); // Turn right 90 degrees
-            Serial.println("Turned right 90 degrees.");
-            alignToWall(); // Align after turning
-
-            // Attempt to move forward after turning right
-            if (canMoveForward(setDistance))
-            {
-                Serial.println("Path clear forward after right turn. Moving forward...");
-                _movement.forward(moveDistance);
-                Serial.println("Moved forward.");
-            }
+            Serial.println("No valid movement detected. Stopping.");
         }
+
         Serial.println("----- End Loop -----");
     }
 }

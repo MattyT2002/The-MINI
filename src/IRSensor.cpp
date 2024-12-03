@@ -42,13 +42,15 @@ float IR_sensor::read()
     // Combine the two bytes of data into a single raw value
     int rawValue = (_cmd[0] << 8) | _cmd[1];
 
+   
+    float distance = -2.813e-8 * rawValue*rawValue + 0.0105 * rawValue + -7.238;
     
-    float distance = 5.494 * log(rawValue) + 0.000528 * rawValue + -44.0483; 
-
     // Optional: Implement smoothing (e.g., exponential moving average)
     static float smoothedDistance = distance;  // Initialize with the first reading
     const float alpha = 0.8f;                  // Smoothing factor 
     smoothedDistance = alpha * distance + (1.0f - alpha) * smoothedDistance;
+  
 
-    return smoothedDistance; // Return the smoothed, calibrated distance
+    return distance; // Return the smoothed, calibrated distance
+
 }

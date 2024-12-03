@@ -6,8 +6,8 @@ using namespace mbed;
 
 #define FRONT_LEFT 0x02
 #define FRONT_RIGHT 0x01
-#define SIDE_RIGHT 0x04
-#define SIDE_LEFT 0x03
+#define SIDE_RIGHT 0x03
+#define SIDE_LEFT 0x04
 class IR_sensor
 {
 public:

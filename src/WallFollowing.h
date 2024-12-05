@@ -20,6 +20,7 @@ private:
     bool canTurnLeft(float threshold);
     bool canMoveForward(float threshold);
     bool isTooCloseToWall(float setDistance);
+    bool shouldTurnLeft(int currentHeading);
     void alignToWall();
     void moveAwayFromWall(float moveDistance);
 };

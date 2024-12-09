@@ -30,6 +30,14 @@ bool WallFollowing::canTurnLeft(float threshold)
     return leftDistance > threshold; // Check if there's enough space on the left
 }
 
+bool WallFollowing::canTurnRight(float threshold)
+{
+    float rightDistance = _rightSideIR.read();
+    Serial.print("Right Side Sensor: ");
+    Serial.println(rightDistance);
+    return rightDistance > threshold; // Check if there's enough space on the left
+}
+
 // Check if the robot can move forward
 bool WallFollowing::canMoveForward(float threshold)
 {
@@ -41,15 +49,66 @@ bool WallFollowing::canMoveForward(float threshold)
     Serial.println(frontRightDistance);
     return (frontLeftDistance > threshold && frontRightDistance > threshold);
 }
-
-void WallFollowing::followLeftWall(float setDistance, float moveDistance)
+bool WallFollowing::shouldTurnLeft(int currentHeading, float leftIR, float rightIR, float threshold)
 {
-    int heading = 0; // Initial heading is 0° (forward direction)
+    int leftHeading = (currentHeading - 90) % 360;  // Calculate heading after a left turn
+    int rightHeading = (currentHeading + 90) % 360; // Calculate heading after a right turn
+
+    // Debug: Print calculated headings
+    Serial.print("Current Heading: ");
+    Serial.println(currentHeading);
+    Serial.print("Left Heading: ");
+    Serial.println(leftHeading);
+    Serial.print("Right Heading: ");
+    Serial.println(rightHeading);
+
+    // Debug: Print absolute differences
+    Serial.print("Abs difference for Left: ");
+    Serial.println(abs(leftHeading - 0));
+    Serial.print("Abs difference for Right: ");
+    Serial.println(abs(rightHeading - 0));
+
+    // Debug: Print IR readings
+    Serial.print("Left IR Reading: ");
+    Serial.println(leftIR);
+    Serial.print("Right IR Reading: ");
+    Serial.println(rightIR);
+
+    // Determine turn
+    if (abs(leftHeading - 0) < abs(rightHeading - 0))
+    {
+        Serial.println("Decision: Turn Left (smaller difference)");
+        return true; // Turn left
+    }
+    else if (abs(leftHeading - 0) == abs(rightHeading - 0))
+    {
+        if (leftIR < threshold)
+        { // Wall is close on the left
+            Serial.println("Decision: Turn Right (wall close on the left)");
+            return false; // Turn right
+        }
+        else
+        { // Ample space on the left
+            Serial.println("Decision: Turn Left (ample space on the left)");
+            return true; // Turn left
+        }
+    }
+    else
+    {
+        Serial.println("Decision: Turn Right (smaller difference)");
+        return false; // Turn right
+    }
+}
+
+void WallFollowing::followLeftWall(float setDistance, float moveDistance, int buffer)
+{
+    int heading = 0;           // Initial heading is 0° (forward direction)
+    int failureCounter = 0;    // Counter to track consecutive failures
+    const int maxFailures = 3; // Maximum allowed failures before performing a 180 spin
 
     while (true)
     {
         Serial.println("----- Begin Loop -----");
-
         // Read sensor distances
         float frontRight = _frontRightIR.read();
         float frontLeft = _frontLeftIR.read();
@@ -68,61 +127,100 @@ void WallFollowing::followLeftWall(float setDistance, float moveDistance)
         Serial.print("Current Heading: ");
         Serial.println(heading);
 
-        // Prioritize moving forward in the initial direction
-        if (canMoveForward(moveDistance) && heading == 0)
+        // Detect corner case: front blocked and left wall close
+        bool cornerDetectedLeft = (frontRight < moveDistance + buffer && left < moveDistance + buffer * 3);
+        bool cornerDetectedRight = (frontRight < moveDistance + buffer && right < moveDistance + buffer * 3);
+
+        if (cornerDetectedLeft)
         {
-            Serial.println("Path clear forward and maintaining initial heading. Moving forward...");
-            _movement.forward(moveDistance);
+            Serial.println("Corner detected! Turning right...");
+            _movement.turnRight(90);
+            heading = (heading + 90) % 360; // Update heading
+            failureCounter = 0;             // Reset failure counter
+            continue;                       // Skip remaining logic in this loop and reevaluate
         }
-        else if (frontLeft < setDistance || frontRight < setDistance) // If front wall detected
+
+        if (cornerDetectedRight)
         {
-            // Determine which turn (left or right) will get closer to heading 0°
-            if (shouldTurnLeft(heading))
+            Serial.println("Corner detected! Turning left...");
+            _movement.turnLeft(90);
+            heading = (heading - 90 + 360) % 360; // Update heading
+            failureCounter = 0;                   // Reset failure counter
+            continue;                             // Skip remaining logic in this loop and reevaluate
+        }
+
+        // Normal decision logic
+        if (canMoveForward(moveDistance + buffer) && heading == 0)
+        {
+            Serial.println("Path clear forward. Moving forward...");
+            _movement.forward(moveDistance);
+            failureCounter = 0; // Reset failure counter
+        }
+        else if (shouldTurnLeft(heading, left, right, (moveDistance + buffer * 3)))
+        {
+            if (canTurnLeft(moveDistance + buffer * 2))
             {
-                Serial.println("Prioritizing left turn to get closer to initial heading...");
+                if (canMoveForward(moveDistance + buffer))
+                {
+                    Serial.println("Path clear forward. Moving forward...");
+                    _movement.forward(moveDistance);
+                    failureCounter = 0; // Reset failure counter
+                }
+                Serial.println("Turning left to avoid front wall...");
                 _movement.turnLeft(90);
-                heading = (heading - 90 + 360) % 360; // Update heading
+                heading = (heading - 90 + 360) % 360; // Update heading and normalize
                 alignToWall();
+                failureCounter = 0; // Reset failure counter
             }
             else
             {
-                Serial.println("Prioritizing right turn to get closer to initial heading...");
-                _movement.turnRight(90);
-                heading = (heading + 90) % 360; // Update heading
-                alignToWall();
+                failureCounter++;
             }
-        }
-        // Check for left or right openings if no immediate obstacles in front
-        else if (left > setDistance)
-        {
-            Serial.println("Left opening detected. Turning left...");
-            _movement.turnLeft(90);
-            heading = (heading - 90 + 360) % 360; // Update heading
-            alignToWall();
-        }
-        else if (right > setDistance)
-        {
-            Serial.println("Right opening detected. Turning right...");
-            _movement.turnRight(90);
-            heading = (heading + 90) % 360; // Update heading
-            alignToWall();
         }
         else
         {
-            Serial.println("No valid movement detected. Stopping.");
+            if (canTurnRight(moveDistance + buffer * 3))
+            {
+                if (canMoveForward(moveDistance + buffer))
+                {
+                    Serial.println("Path clear forward. Moving forward...");
+                    _movement.forward(moveDistance);
+                    failureCounter = 0; // Reset failure counter
+                }
+
+                Serial.println("Turning right to avoid front wall...");
+                _movement.turnRight(90);
+                heading = (heading + 90) % 360; // Update heading and normalize
+                alignToWall();
+                failureCounter = 0; // Reset failure counter
+            }
+            else
+            {
+                failureCounter++;
+            }
+        }
+
+        // Check if forward movement is possible after turning
+        if (canMoveForward(moveDistance + buffer))
+        {
+            Serial.println("Path clear after turning. Moving forward...");
+            _movement.forward(moveDistance);
+            failureCounter = 0; // Reset failure counter
+        }
+        else
+        {
+            failureCounter++;
+        }
+
+        // Check for failure condition
+        if (failureCounter >= maxFailures)
+        {
+            Serial.println("Too many failures! Performing a 180-degree spin...");
+            _movement.turnRight(180);
+            heading = (heading + 180) % 360; // Update heading for 180-degree turn
+            failureCounter = 0;              // Reset failure counter
         }
 
         Serial.println("----- End Loop -----");
     }
 }
-
-// Helper function to decide if a left turn is closer to heading 0°
-bool WallFollowing::shouldTurnLeft(int currentHeading)
-{
-    int leftHeading = (currentHeading - 90 + 360) % 360; // Calculate heading after a left turn
-    int rightHeading = (currentHeading + 90) % 360;      // Calculate heading after a right turn
-
-    // Compare absolute differences to determine the closer turn
-    return abs(leftHeading - 0) < abs(rightHeading - 0);
-}
-

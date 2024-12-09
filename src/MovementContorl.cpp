@@ -147,7 +147,7 @@ void MovementControl::turnLeft(int degrees)
     _leftMotor.move(Left_Forward, Default_pwm);
     _rightMotor.move(Right_Backwards, Default_pwm);
 
-    while (leftEncoder.getDistance() > -arclength && rightEncoder.getDistance() < arclength)
+    while (leftEncoder.getDistance() >= -arclength || rightEncoder.getDistance() <= arclength)
     {
         float leftDist = leftEncoder.getDistance();
         float rightDist = rightEncoder.getDistance();
@@ -176,7 +176,7 @@ void MovementControl::turnLeft(int degrees)
         // Update motor speeds
         _leftMotor.move(Left_Forward, leftSpeed);
         _rightMotor.move(Right_Backwards, rightSpeed);
-
+       
         ThisThread::sleep_for(10); // Allow time for adjustment
     }
 
@@ -196,7 +196,7 @@ void MovementControl::turnRight(int degrees)
     _leftMotor.move(Left_Backwards, Default_pwm);
     _rightMotor.move(Right_Forward, Default_pwm);
 
-    while (leftEncoder.getDistance() < arclength && rightEncoder.getDistance() > -arclength)
+    while (leftEncoder.getDistance() <= arclength || rightEncoder.getDistance() >= -arclength)
     {
         float leftDist = leftEncoder.getDistance();
         float rightDist = rightEncoder.getDistance();
@@ -246,7 +246,7 @@ void MovementControl::alignToWall()
         float leftDistance = IRFrontLeft.read();
         float rightDistance = IRFrontRight.read();
         float distanceError = leftDistance - rightDistance;
-         if(leftDistance > 300 || rightDistance > 300){
+         if(leftDistance > 300 && rightDistance > 300){
             Serial.println("wall to far aware");
             break;
         }
@@ -283,7 +283,7 @@ void MovementControl::alignToWall()
     }
 }
 
-void MovementControl::wallFollow(float wallDistance, float moveDistance)
+void MovementControl::wallFollow(float wallDistance, float moveDistance, int buffer)
 {
-    wallFollower.followLeftWall(wallDistance, moveDistance);
+    wallFollower.followLeftWall(wallDistance, moveDistance, buffer);
 }

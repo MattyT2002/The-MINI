@@ -4,11 +4,12 @@
 #include "IRSensor.h"
 #include "MovementControl.h"
 
+ 
 class WallFollowing
 {
 public:
     WallFollowing(MovementControl &movement, IR_sensor &leftSideIR, IR_sensor &rightSideIR, IR_sensor &frontLeftIR, IR_sensor &frontRightIR);
-    void followLeftWall(float setDistance, float moveDistance);
+    void followLeftWall(float setDistance, float moveDistance, int buffer);
 
 private:
     MovementControl &_movement;
@@ -18,9 +19,10 @@ private:
     IR_sensor &_frontRightIR; // Sensor for detecting front-right obstacles
 
     bool canTurnLeft(float threshold);
+    bool canTurnRight(float threshold);
     bool canMoveForward(float threshold);
     bool isTooCloseToWall(float setDistance);
-    bool shouldTurnLeft(int currentHeading);
+    bool shouldTurnLeft(int currentHeading, float leftIR, float rightIR, float threshold);
     void alignToWall();
     void moveAwayFromWall(float moveDistance);
 };

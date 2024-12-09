@@ -12,8 +12,8 @@ using namespace mbed;
 #define Left_Backwards 0
 #define pi 3.14
 #define center_to_wheel 45
-#define proportionalResponse 0.07
-#define tolerance 10
+#define proportionalResponse 0.09
+#define tolerance 1.4
 #define alignSpeed 0.15
 class MovementControl
 {
@@ -26,7 +26,7 @@ public:
     void turnLeft(int degrees);
     void turnRight(int degrees);
     void alignToWall();
-    void wallFollow(float wallDistance, float moveDistance);
+    void wallFollow(float wallDistance, float moveDistance, int buffer);
 
 private:
     float getacrlength(float degrees);

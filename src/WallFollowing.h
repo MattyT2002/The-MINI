@@ -25,6 +25,7 @@ private:
     bool shouldTurnLeft(int currentHeading, float leftIR, float rightIR, float threshold);
     void alignToWall();
     void moveAwayFromWall(float moveDistance);
+    void moveForward(float distance, int heading, int &currentDistance);
 };
 
 #endif

@@ -246,7 +246,7 @@ void MovementControl::alignToWall()
         float leftDistance = IRFrontLeft.read();
         float rightDistance = IRFrontRight.read();
         float distanceError = leftDistance - rightDistance;
-         if(leftDistance > 100 || rightDistance > 100){
+         if(leftDistance > 155 || rightDistance > 155){
             Serial.println("wall to far aware");
             break;
         }

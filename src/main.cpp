@@ -22,6 +22,8 @@ void loop()
 {
     wait_us(3000000);
     movementControl.wallFollow(105,105,55);
+    Serial.println("wall follow done");
+     wait_us(30000000);
     /*
     while (true)
     {

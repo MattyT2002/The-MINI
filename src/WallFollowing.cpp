@@ -100,13 +100,29 @@ bool WallFollowing::shouldTurnLeft(int currentHeading, float leftIR, float right
     }
 }
 
+void WallFollowing::moveForward(float distance, int heading, int &currentDistance) {
+    // Move the robot forward
+    _movement.forward(distance);
+
+    // Update the distance tracker
+    if (heading == 0) {
+        // Moving in the desired 0° direction
+        currentDistance += distance; 
+       
+    } else if (heading == 180) {
+        // Moving in the opposite direction
+        currentDistance -= distance;
+    }
+}
+
 void WallFollowing::followLeftWall(float setDistance, float moveDistance, int buffer)
 {
     int heading = 0;           // Initial heading is 0° (forward direction)
     int failureCounter = 0;    // Counter to track consecutive failures
     const int maxFailures = 3; // Maximum allowed failures before performing a 180 spin
-
-    while (true)
+    int totalDistance = 1400;
+    int currentDistance = 0;
+    while (totalDistance > currentDistance)
     {
         Serial.println("----- Begin Loop -----");
         // Read sensor distances
@@ -130,7 +146,7 @@ void WallFollowing::followLeftWall(float setDistance, float moveDistance, int bu
         // Detect corner case: front blocked and left wall close
         bool cornerDetectedLeft = (frontRight < moveDistance + buffer && left < moveDistance + buffer * 3);
         bool cornerDetectedRight = (frontRight < moveDistance + buffer && right < moveDistance + buffer * 3);
-    
+
         if (cornerDetectedLeft)
         {
             Serial.println("Corner detected! Turning right...");
@@ -138,7 +154,7 @@ void WallFollowing::followLeftWall(float setDistance, float moveDistance, int bu
             heading = (heading + 90) % 360; // Update heading
             failureCounter = 0;             // Reset failure counter
             alignToWall();
-            continue;                       // Skip remaining logic in this loop and reevaluate
+            continue; // Skip remaining logic in this loop and reevaluate
         }
 
         if (cornerDetectedRight)
@@ -148,16 +164,17 @@ void WallFollowing::followLeftWall(float setDistance, float moveDistance, int bu
             heading = (heading - 90 + 360) % 360; // Update heading
             failureCounter = 0;                   // Reset failure counter
             alignToWall();
-            continue;                             // Skip remaining logic in this loop and reevaluate
+            continue; // Skip remaining logic in this loop and reevaluate
         }
 
         // Normal decision logic
         if (canMoveForward(moveDistance + buffer) && heading == 0)
         {
             Serial.println("Path clear forward. Moving forward...");
-            _movement.forward(moveDistance);
+            moveForward(moveDistance, heading, currentDistance);
             failureCounter = 0; // Reset failure counter
             alignToWall();
+            
         }
         else if (shouldTurnLeft(heading, left, right, (moveDistance + buffer * 3)))
         {
@@ -166,8 +183,9 @@ void WallFollowing::followLeftWall(float setDistance, float moveDistance, int bu
                 if (canMoveForward(moveDistance + buffer))
                 {
                     Serial.println("Path clear forward. Moving forward...");
-                    _movement.forward(moveDistance);
+                    moveForward(moveDistance, heading, currentDistance);
                     failureCounter = 0; // Reset failure counter
+                    
                 }
                 Serial.println("Turning left to avoid front wall...");
                 _movement.turnLeft(90);
@@ -187,7 +205,7 @@ void WallFollowing::followLeftWall(float setDistance, float moveDistance, int bu
                 if (canMoveForward(moveDistance + buffer))
                 {
                     Serial.println("Path clear forward. Moving forward...");
-                    _movement.forward(moveDistance);
+                    moveForward(moveDistance, heading, currentDistance);
                     failureCounter = 0; // Reset failure counter
                     alignToWall();
                 }
@@ -208,7 +226,7 @@ void WallFollowing::followLeftWall(float setDistance, float moveDistance, int bu
         if (canMoveForward(moveDistance + buffer))
         {
             Serial.println("Path clear after turning. Moving forward...");
-            _movement.forward(moveDistance);
+            moveForward(moveDistance, heading, currentDistance);
             failureCounter = 0; // Reset failure counter
             alignToWall();
         }

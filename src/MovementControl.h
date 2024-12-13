@@ -11,9 +11,9 @@ using namespace mbed;
 #define Right_Backwards 1
 #define Left_Backwards 0
 #define pi 3.14
-#define center_to_wheel 45
+#define center_to_wheel 41
 #define proportionalResponse 0.09
-#define tolerance 1.4
+#define tolerance 10
 #define alignSpeed 0.15
 class MovementControl
 {

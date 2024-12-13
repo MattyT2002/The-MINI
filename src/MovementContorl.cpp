@@ -176,7 +176,7 @@ void MovementControl::turnLeft(int degrees)
         // Update motor speeds
         _leftMotor.move(Left_Forward, leftSpeed);
         _rightMotor.move(Right_Backwards, rightSpeed);
-       
+        
         ThisThread::sleep_for(10); // Allow time for adjustment
     }
 
@@ -246,7 +246,7 @@ void MovementControl::alignToWall()
         float leftDistance = IRFrontLeft.read();
         float rightDistance = IRFrontRight.read();
         float distanceError = leftDistance - rightDistance;
-         if(leftDistance > 300 && rightDistance > 300){
+         if(leftDistance > 100 || rightDistance > 100){
             Serial.println("wall to far aware");
             break;
         }

@@ -24,41 +24,5 @@ void loop()
     movementControl.wallFollow(105,105,55);
     Serial.println("wall follow done");
      wait_us(30000000);
-    /*
-    while (true)
-    {
-        Serial.print("Right | ");
-        Serial.println(FrontRight.read());
-        Serial.print("left | ");
-        Serial.println(FrontLeft.read());
-        
-        
-
-    }
-    
-   
-
-    
-    wait_us(3000000);
-    movementControl.forward(100);
-    wait_us(3000000);
-    movementControl.reverse(100);
-    wait_us(2000000);
-    movementControl.turnLeft(90);
-    
-    wait_us(3000000);
-    movementControl.forward(300);
-    movementControl.alignToWall();
-    movementControl.turnLeft(90);
-    movementControl.alignToWall();
-    wait_us(500000);
-    movementControl.turnLeft(90);
-    movementControl.alignToWall();
-    wait_us(500000);
-    movementControl.turnRight(90);
-    movementControl.alignToWall();
-    wait_us(500000);
-    movementControl.turnRight(90);
-    movementControl.alignToWall();
-*/
+  
 }

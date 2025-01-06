@@ -6,7 +6,8 @@
 
 #define GRID_SIZE_X 145
 #define GRID_SIZE_Y 200
-
+#define CELL_SIZE = 10
+#define ROBOT_SIZE = 150
  
 class WallFollowing
 {
@@ -31,6 +32,8 @@ private:
     void moveForward(float distance, int heading, int &currentDistance);
     void initialiseOccupancyGrid();
     void printOccupancyGrid();
+    void updateOccupancyGrid(float robotX, float robotY, float heading);
+    void updateGridFromSensors(int gridX, int gridY, float heading);
 };
 
 #endif

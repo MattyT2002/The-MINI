@@ -4,8 +4,8 @@
 #include "IRSensor.h"
 #include "MovementControl.h"
 
-#define GRID_SIZE_X 290
-#define GRID_SIZE_Y 400
+#define GRID_SIZE_X 145
+#define GRID_SIZE_Y 200
 
  
 class WallFollowing
@@ -13,7 +13,7 @@ class WallFollowing
 public:
     WallFollowing(MovementControl &movement, IR_sensor &leftSideIR, IR_sensor &rightSideIR, IR_sensor &frontLeftIR, IR_sensor &frontRightIR);
     void followLeftWall(float setDistance, float moveDistance, int buffer);
-
+    
 private:
     MovementControl &_movement;
     IR_sensor &_leftSideIR;   // Sensor for detecting left wall

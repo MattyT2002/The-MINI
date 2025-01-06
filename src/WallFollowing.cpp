@@ -154,10 +154,10 @@ void WallFollowing::followLeftWall(float setDistance, float moveDistance, int bu
     int totalDistance = 1400;
     int currentDistance = 0;
     initialiseOccupancyGrid();
-    printOccupancyGrid();
     
     while (totalDistance > currentDistance)
     {
+        printOccupancyGrid();
         Serial.println("----- Begin Loop -----");
         // Read sensor distances
         float frontRight = _frontRightIR.read();

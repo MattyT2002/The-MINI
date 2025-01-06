@@ -153,6 +153,9 @@ void WallFollowing::followLeftWall(float setDistance, float moveDistance, int bu
     const int maxFailures = 3; // Maximum allowed failures before performing a 180 spin
     int totalDistance = 1400;
     int currentDistance = 0;
+    initialiseOccupancyGrid();
+    printOccupancyGrid();
+    
     while (totalDistance > currentDistance)
     {
         Serial.println("----- Begin Loop -----");

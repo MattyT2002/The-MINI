@@ -4,6 +4,9 @@
 #include "IRSensor.h"
 #include "MovementControl.h"
 
+#define GRID_SIZE_X 290
+#define GRID_SIZE_Y 400
+
  
 class WallFollowing
 {
@@ -26,6 +29,8 @@ private:
     void alignToWall();
     void moveAwayFromWall(float moveDistance);
     void moveForward(float distance, int heading, int &currentDistance);
+    void initialiseOccupancyGrid();
+    void printOccupancyGrid();
 };
 
 #endif

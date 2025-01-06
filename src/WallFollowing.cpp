@@ -10,6 +10,8 @@
 using namespace rtos;
 using namespace mbed;
 
+int occupancyGrid[GRID_SIZE_X][GRID_SIZE_Y];
+
 WallFollowing::WallFollowing(MovementControl &movement, IR_sensor &leftSideIR, IR_sensor &rightSideIR, IR_sensor &frontLeftIR, IR_sensor &frontRightIR)
     : _movement(movement), _leftSideIR(leftSideIR), _rightSideIR(rightSideIR), _frontLeftIR(frontLeftIR), _frontRightIR(frontRightIR) {}
 
@@ -112,6 +114,35 @@ void WallFollowing::moveForward(float distance, int heading, int &currentDistanc
     } else if (heading == 180) {
         // Moving in the opposite direction
         currentDistance -= distance;
+    }
+}
+
+void WallFollowing::initialiseOccupancyGrid()
+{
+    for (int x = 0; x < GRID_SIZE_X; x++) {
+        for (int y = 0; y < GRID_SIZE_Y; y++) {
+            occupancyGrid[x][y] = -1; // Unknown
+        }
+    }
+}
+
+void WallFollowing::printOccupancyGrid()
+{
+    for (int y = 0; y < GRID_SIZE_Y; y++) {
+        for (int x = 0; x < GRID_SIZE_X; x++) {
+            if (occupancyGrid[x][y] == -1){
+                Serial.print("?");
+            } 
+            else if (occupancyGrid[x][y] == 1) 
+            {
+                Serial.print("#");
+            }
+            else 
+            {
+                Serial.print(".");
+            }
+        }
+        Serial.println();
     }
 }
 

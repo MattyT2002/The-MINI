@@ -11,7 +11,7 @@ using namespace mbed;
 #define Right_Backwards 1
 #define Left_Backwards 0
 #define pi 3.14
-#define center_to_wheel 41
+#define center_to_wheel 42
 #define proportionalResponse 0.1
 #define tolerance 0.5
 #define alignSpeed 0.15

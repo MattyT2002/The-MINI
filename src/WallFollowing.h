@@ -30,10 +30,8 @@ private:
     bool canTurnLeft(float threshold);
     bool canTurnRight(float threshold);
     bool canMoveForward(float threshold);
-    bool isTooCloseToWall(float setDistance);
     bool shouldTurnLeft(int currentHeading, float leftIR, float rightIR, float threshold);
     void alignToWall();
-    void moveAwayFromWall(float moveDistance);
     void moveForward(float distance, int heading, int &currentDistance);
     void initialiseOccupancyGrid();
     void printOccupancyGrid();
@@ -41,6 +39,8 @@ private:
     void markRobotPosition(int robotX, int robotY);
     void markObstacle(int x, int y);
     int convertDistanceToGridBlock(float distance);
+    void markFreeSpace(int startX, int startY, int endX, int endY);
+    void updateRobotPosition(int &gridX, int &gridY, int heading, int blocksMoved);
 };
 
 #endif

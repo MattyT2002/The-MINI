@@ -6,9 +6,14 @@
 
 #define GRID_SIZE_X 145
 #define GRID_SIZE_Y 200
-#define CELL_SIZE = 10
-#define ROBOT_SIZE = 150
- 
+#define GRID_CELL_SIZE 10
+#define ROBOT_SIZE 150 // robot size in mm in length and width
+#define ROBOT_CELLS 15 // robot takes up a 3x3 grid size on the occupancy grd
+
+#define GRID_FORWARD 0 // heading representing the direction the robot is facing and going in relation to the occupancy grid and the desired direction
+#define GRID_RIGHT 90
+#define GRID_BACKWARDS 180
+#define GRID_LEFT 270
 class WallFollowing
 {
 public:
@@ -32,8 +37,10 @@ private:
     void moveForward(float distance, int heading, int &currentDistance);
     void initialiseOccupancyGrid();
     void printOccupancyGrid();
-    void updateOccupancyGrid(float robotX, float robotY, float heading);
-    void updateGridFromSensors(int gridX, int gridY, float heading);
+    void updateOccupancyGrid(int robotX, int robotY, int heading);
+    void markRobotPosition(int robotX, int robotY);
+    void markObstacle(int x, int y);
+    int convertDistanceToGridBlock(float distance);
 };
 
 #endif

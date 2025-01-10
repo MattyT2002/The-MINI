@@ -128,7 +128,7 @@ void WallFollowing::initialiseOccupancyGrid()
 
 void WallFollowing::printOccupancyGrid()
 {
-    for (int y = 0; y < GRID_SIZE_Y; y++) {
+    for (int y = GRID_SIZE_Y; y > 0; y--) {
         for (int x = 0; x < GRID_SIZE_X; x++) {
             if (occupancyGrid[x][y] == -1){
                 Serial.print("?");
@@ -141,9 +141,151 @@ void WallFollowing::printOccupancyGrid()
             {
                 Serial.print(".");
             }
+            
         }
         Serial.println();
     }
+}
+
+void WallFollowing::markRobotPosition(int robotX, int robotY)
+{
+    // Calculate the bounds of the robot in the grid
+    int startX = robotX - 7; // Half of 15 cells rounded down
+    int endX = robotX + 7;   // Half of 15 cells rounded down
+    int startY = robotY - 7;
+    int endY = robotY + 7;
+
+    // Ensure the bounds are within the grid limits
+    startX = max(0, startX);
+    endX = min(GRID_SIZE_X - 1, endX);
+    startY = max(0, startY);
+    endY = min(GRID_SIZE_Y - 1, endY);
+
+    // Mark all cells within the robot's area as free space
+    for (int x = startX; x <= endX; x++) {
+        for (int y = startY; y <= endY; y++) {
+            occupancyGrid[x][y] = 0; // Free space
+        }
+    }
+}
+
+void WallFollowing::updateOccupancyGrid(int robotX, int robotY, int heading)
+{
+    markRobotPosition(robotX, robotY);
+
+    float frontLeftDistance = _frontLeftIR.read();
+    float frontRightDistance = _frontRightIR.read();
+    float leftDistance = _leftSideIR.read();
+    float rightDistance = _rightSideIR.read();
+    int blocksFromFrountLeftSensorToWall = convertDistanceToGridBlock(frontLeftDistance);
+    int blocksFromFrountRightSensorToWall = convertDistanceToGridBlock(frontRightDistance);
+    int blocksFromLeftSensorToWall = convertDistanceToGridBlock(leftDistance);
+    int blocksFromRightSensorToWall = convertDistanceToGridBlock(rightDistance); 
+
+    // the x and y coordinates for the sensors in the grid.
+        int frontLeftSensorX; 
+        int frontLeftSensorY;
+        int frontRightSensorX; 
+        int frontRightSensorY;  
+        int leftSensorX; 
+        int leftSensorY; 
+        int rightSensorX;
+        int rightSensorY;
+    // direction the sensor is facing in repset the the grid direction
+        int frontLeftSensorDir;
+        int frontRightSensorDir;
+        int leftSensorDir;
+        int rightSensorDir;
+    /* will use the current heading of the robot 
+    and robots center location on the grid to calculate
+    the location of the sensors on the grid*/
+    if (heading == GRID_FORWARD)
+    { 
+        frontLeftSensorX = robotX - 2; 
+        frontLeftSensorY = robotY + 5 ; 
+        frontRightSensorX = robotX + 2; 
+        frontRightSensorY = robotY + 5 ; 
+        leftSensorX = robotX - 4; 
+        leftSensorY = robotY;
+        rightSensorX = robotX + 4;
+        rightSensorY = robotY;
+        
+        frontLeftSensorDir = 0;
+        frontRightSensorDir = 0;
+        leftSensorDir = 270;
+        rightSensorDir = 90;
+        //front sensors
+
+        markObstacle(frontLeftSensorX,frontLeftSensorY + blocksFromFrountLeftSensorToWall);
+        markObstacle(frontRightSensorX,frontRightSensorY + blocksFromFrountRightSensorToWall);
+        //side sensors 
+        markObstacle(leftSensorX - blocksFromLeftSensorToWall ,leftSensorY);
+        markObstacle(rightSensorX + blocksFromFrountRightSensorToWall ,rightSensorY);
+    } 
+    else if (heading == GRID_RIGHT)
+    {
+        frontLeftSensorX = robotX + 5; 
+        frontLeftSensorY = robotY + 2 ; 
+        frontRightSensorX = robotX + 5; 
+        frontRightSensorY = robotY - 2 ; 
+        leftSensorX = robotX; 
+        leftSensorY = robotY + 4;
+        rightSensorX = robotX;
+        rightSensorY = robotY - 4;
+
+        frontLeftSensorDir = 90 ;
+        frontRightSensorDir = 90;
+        leftSensorDir = 0;
+        rightSensorDir = 180;    
+    }
+    else if (heading == GRID_BACKWARDS)
+    {
+        frontLeftSensorX = robotX + 2; 
+        frontLeftSensorY = robotY - 5; 
+        frontRightSensorX = robotX - 2; 
+        frontRightSensorY = robotY - 5 ; 
+        leftSensorX = robotX + 4; 
+        leftSensorY = robotY;
+        rightSensorX = robotX - 4;
+        rightSensorY = robotY;
+
+        frontLeftSensorDir = 180;
+        frontRightSensorDir = 180;
+        leftSensorDir = 90;
+        rightSensorDir = 270;  
+    }
+    else if (heading == GRID_LEFT)
+    {
+        frontLeftSensorX = robotX - 5; 
+        frontLeftSensorY = robotY - 2 ; 
+        frontRightSensorX = robotX - 5; 
+        frontRightSensorY = robotY + 2 ; 
+        leftSensorX = robotX; 
+        leftSensorY = robotY + 4;
+        rightSensorX = robotX;
+        rightSensorY = robotY - 4; 
+
+        frontLeftSensorDir = 270;
+        frontRightSensorDir = 270;
+        leftSensorDir = 180;
+        rightSensorDir = 0; 
+    }
+    
+    
+   
+}
+
+void WallFollowing::markObstacle(int x, int y)
+{
+    // Ensure the coordinates are within the grid bounds
+    if (x >= 0 && x < GRID_SIZE_X && y >= 0 && y < GRID_SIZE_Y) {
+        occupancyGrid[x][y] = 1;  // Mark this cell as occupied (obstacle)
+    }
+}
+
+int WallFollowing::convertDistanceToGridBlock(float distance)
+{
+    return round(distance/GRID_CELL_SIZE);
 }
 
 void WallFollowing::followLeftWall(float setDistance, float moveDistance, int buffer)
@@ -154,10 +296,14 @@ void WallFollowing::followLeftWall(float setDistance, float moveDistance, int bu
     int totalDistance = 1400;
     int currentDistance = 0;
     initialiseOccupancyGrid();
-    
+    markRobotPosition(10,10);
+    printOccupancyGrid();
+    wait_us(10000000);
     while (totalDistance > currentDistance)
     {
+        updateOccupancyGrid(70,100,0);
         printOccupancyGrid();
+        wait_us(5000000);
         Serial.println("----- Begin Loop -----");
         // Read sensor distances
         float frontRight = _frontRightIR.read();
@@ -198,7 +344,7 @@ void WallFollowing::followLeftWall(float setDistance, float moveDistance, int bu
             heading = (heading - 90 + 360) % 360; // Update heading
             failureCounter = 0;                   // Reset failure counter
             alignToWall();
-            continue; // Skip remaining logic in this loop and reevaluate
+            continue; // Skip remaining logic in this loop and reexzvaluate
         }
 
         // Normal decision logic

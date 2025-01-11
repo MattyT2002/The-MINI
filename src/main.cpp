@@ -24,5 +24,6 @@ void loop()
     movementControl.wallFollow(110,110,55);
     Serial.println("wall follow done");
      wait_us(20000000);
+ 
   
 }

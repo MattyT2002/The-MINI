@@ -10,7 +10,6 @@
 using namespace rtos;
 using namespace mbed;
 
-int occupancyGrid[GRID_SIZE_X][GRID_SIZE_Y];
 
 WallFollowing::WallFollowing(MovementControl &movement, IR_sensor &leftSideIR, IR_sensor &rightSideIR, IR_sensor &frontLeftIR, IR_sensor &frontRightIR)
     : _movement(movement), _leftSideIR(leftSideIR), _rightSideIR(rightSideIR), _frontLeftIR(frontLeftIR), _frontRightIR(frontRightIR) {}
@@ -146,6 +145,14 @@ void WallFollowing::printOccupancyGrid()
             {
                 Serial.print(" #"); // Obstacle
             }
+            else if(occupancyGrid[x][y] == 2)
+            {
+                Serial.print("X");
+            }
+            else if(occupancyGrid[x][y] == -2)
+            {
+                Serial.print("S");
+            }
             else
             {
                 Serial.print(" ."); // Free space
@@ -169,7 +176,7 @@ void WallFollowing::markRobotPosition(int robotX, int robotY)
     endX = min(GRID_SIZE_X - 1, endX);
     startY = max(0, startY);
     endY = min(GRID_SIZE_Y - 1, endY);
-
+    
     // Mark all cells within the robot's area as free space
     for (int x = startX; x <= endX; x++)
     {
@@ -404,11 +411,14 @@ void WallFollowing::followLeftWall(float setDistance, float moveDistance, int bu
     int totalDistance = 1400;
     int currentDistance = 0;
 
+    int startX = 20;
+    int startY = 20;
     // Robot's position in the occupancy grid
-    int gridX = 20; // Initial x-coordinate
-    int gridY = 20; // Initial y-coordinate
-
+    int gridX = startX; // Initial x-coordinate
+    int gridY = startY; // Initial y-coordinate
+    
     initialiseOccupancyGrid();
+    
     markRobotPosition(gridX, gridY); // Mark initial robot position
 
     while (totalDistance > currentDistance)
@@ -544,6 +554,9 @@ void WallFollowing::followLeftWall(float setDistance, float moveDistance, int bu
 
         Serial.println("----- End Loop -----");
     }
+
+    occupancyGrid[gridX][gridY] = 2;
+    occupancyGrid[startX][startY] = -2;
     while (true)
     {
          printOccupancyGrid();

@@ -286,4 +286,7 @@ void MovementControl::alignToWall()
 void MovementControl::wallFollow(float wallDistance, float moveDistance, int buffer)
 {
     wallFollower.followLeftWall(wallDistance, moveDistance, buffer);
+    
 }
+
+

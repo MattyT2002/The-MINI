@@ -19,7 +19,8 @@ class WallFollowing
 public:
     WallFollowing(MovementControl &movement, IR_sensor &leftSideIR, IR_sensor &rightSideIR, IR_sensor &frontLeftIR, IR_sensor &frontRightIR);
     void followLeftWall(float setDistance, float moveDistance, int buffer);
-    
+    void returnToStart();
+    int occupancyGrid[GRID_SIZE_X][GRID_SIZE_Y];
 private:
     MovementControl &_movement;
     IR_sensor &_leftSideIR;   // Sensor for detecting left wall

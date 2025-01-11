@@ -36,9 +36,10 @@ float IR_sensor::read()
         }
         printf("Raw data: 0x%02X 0x%02X\n", _cmd[0], _cmd[1]);
 
+        // create a 16 bit value by shifting _cmd[0] left 8 to the high 8 bits then combine with the _cmd[1] filling out the lower 8 bits
         int rawValue = (_cmd[0] << 8) | _cmd[1];
         printf("Raw value: %d\n", rawValue);
-
+        
         float distance = -2.813e-8 * rawValue * rawValue + 0.0105 * rawValue + -7.238;
         
     

@@ -21,23 +21,11 @@ public:
   void stop();
   void move(int dir, float speed);
 
-  void calCurrentVel();
-  void setMotorVel(float targetVel);
-
 private:
   Encoder &_encoder;
   PwmOut _PwmPin;
   DigitalOut _dirPin;
-  float _currentVel;
-  Ticker _PIDTicker;
-  Ticker _velTicker;
-  float _kp; // protportional gain
-  float _ki; // integral gain
-  float _kd; // derivative gain
-  float _prevError;
-  float _integral;
-  float _targetVel;
-  float _prevEncoderDist;
+ 
 };
 extern Motor leftMotor;
 extern Motor rightMotor;

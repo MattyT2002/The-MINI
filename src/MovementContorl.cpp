@@ -5,7 +5,8 @@
 #include "rtos.h"
 #include "Encoder.h"
 #include "IRSensor.h"
-#include "WallFollowing.h"
+#include "MazeMapping.h"
+#include "ReturnRoute.h"
 
 Encoder rightEncoder(RIGHT_ENCODER_A, RIGHT_ENCODER_B);
 Encoder leftEncoder(LEFT_ENCODER_A, LEFT_ENCODER_B);
@@ -20,7 +21,8 @@ IR_sensor IRSideLeft(SIDE_LEFT);
 IR_sensor IRFrontRight(FRONT_RIGHT);
 IR_sensor IRFrontLeft(FRONT_LEFT);
 
-WallFollowing wallFollower(movementControl, IRSideLeft, IRSideRight, IRFrontLeft, IRFrontRight);
+MazeMapping mazeMap(movementControl, IRSideLeft, IRSideRight, IRFrontLeft, IRFrontRight);
+ReturnRoute returnRoute(mazeMap, movementControl); 
 
 using namespace rtos;
 using namespace mbed;
@@ -283,10 +285,14 @@ void MovementControl::alignToWall()
     }
 }
 
-void MovementControl::wallFollow(float wallDistance, float moveDistance, int buffer)
+void MovementControl::MapThroughMaze(float wallDistance, float moveDistance, int buffer)
 {
-    wallFollower.followLeftWall(wallDistance, moveDistance, buffer);
+    mazeMap.MapThroughMaze(wallDistance, moveDistance, buffer);
     
 }
 
 
+void MovementControl::returnUsingMap()
+{
+    returnRoute.ReturnToStart();
+}

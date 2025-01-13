@@ -1,4 +1,4 @@
-#include "WallFollowing.h"
+#include "MazeMapping.h"
 #include "Arduino.h"
 #include "MotorControl.h"
 #include "MovementControl.h"
@@ -10,20 +10,17 @@
 using namespace rtos;
 using namespace mbed;
 
+//maze mapping construtor
+MazeMapping::MazeMapping(MovementControl &movement, IR_sensor &leftSideIR, IR_sensor &rightSideIR, IR_sensor &frontLeftIR, IR_sensor &frontRightIR)
+    : _movement(movement), 
+      _leftSideIR(leftSideIR), 
+      _rightSideIR(rightSideIR), 
+      _frontLeftIR(frontLeftIR), 
+      _frontRightIR(frontRightIR) {}
 
-WallFollowing::WallFollowing(MovementControl &movement, IR_sensor &leftSideIR, IR_sensor &rightSideIR, IR_sensor &frontLeftIR, IR_sensor &frontRightIR)
-    : _movement(movement), _leftSideIR(leftSideIR), _rightSideIR(rightSideIR), _frontLeftIR(frontLeftIR), _frontRightIR(frontRightIR) {}
-
-// Align the robot with the left wall
-void WallFollowing::alignToWall()
-{
-    Serial.println("Aligning to wall...");
-    // Use MovementControl's alignToWall method
-    _movement.alignToWall();
-}
 
 // Check if the robot can turn left
-bool WallFollowing::canTurnLeft(float threshold)
+bool MazeMapping::canTurnLeft(float threshold)
 {
     float leftDistance = _leftSideIR.read();
     Serial.print("Left Side Sensor: ");
@@ -31,7 +28,7 @@ bool WallFollowing::canTurnLeft(float threshold)
     return leftDistance > threshold; // Check if there's enough space on the left
 }
 
-bool WallFollowing::canTurnRight(float threshold)
+bool MazeMapping::canTurnRight(float threshold)
 {
     float rightDistance = _rightSideIR.read();
     Serial.print("Right Side Sensor: ");
@@ -40,7 +37,7 @@ bool WallFollowing::canTurnRight(float threshold)
 }
 
 // Check if the robot can move forward
-bool WallFollowing::canMoveForward(float threshold)
+bool MazeMapping::canMoveForward(float threshold)
 {
     float frontLeftDistance = _frontLeftIR.read();
     float frontRightDistance = _frontRightIR.read();
@@ -50,7 +47,7 @@ bool WallFollowing::canMoveForward(float threshold)
     Serial.println(frontRightDistance);
     return (frontLeftDistance > threshold && frontRightDistance > threshold);
 }
-bool WallFollowing::shouldTurnLeft(int currentHeading, float leftIR, float rightIR, float threshold)
+bool MazeMapping::shouldTurnLeft(int currentHeading, float leftIR, float rightIR, float threshold)
 {
     int leftHeading = (currentHeading - 90) % 360;  // Calculate heading after a left turn
     int rightHeading = (currentHeading + 90) % 360; // Calculate heading after a right turn
@@ -101,7 +98,7 @@ bool WallFollowing::shouldTurnLeft(int currentHeading, float leftIR, float right
     }
 }
 
-void WallFollowing::moveForward(float distance, int heading, int &currentDistance)
+void MazeMapping::moveForward(float distance, int heading, int &currentDistance)
 {
     // Move the robot forward
     _movement.forward(distance);
@@ -119,7 +116,7 @@ void WallFollowing::moveForward(float distance, int heading, int &currentDistanc
     }
 }
 
-void WallFollowing::initialiseOccupancyGrid()
+void MazeMapping::initialiseOccupancyGrid()
 {
     for (int x = 0; x < GRID_SIZE_X; x++)
     {
@@ -130,7 +127,7 @@ void WallFollowing::initialiseOccupancyGrid()
     }
 }
 
-void WallFollowing::printOccupancyGrid()
+void MazeMapping::printOccupancyGrid()
 {
     Serial.println("Occupancy Grid:");
     for (int y = GRID_SIZE_Y - 1; y >= 0; y--) // Start from the top row
@@ -163,7 +160,7 @@ void WallFollowing::printOccupancyGrid()
 }
 
 
-void WallFollowing::markRobotPosition(int robotX, int robotY)
+void MazeMapping::markRobotPosition(int robotX, int robotY)
 {
     // Calculate the bounds of the robot in the grid
     int startX = robotX - 7; // Half of 15 cells rounded down
@@ -187,7 +184,7 @@ void WallFollowing::markRobotPosition(int robotX, int robotY)
     }
 }
 
-void WallFollowing::updateOccupancyGrid(int robotX, int robotY, int heading)
+void MazeMapping::updateOccupancyGrid(int robotX, int robotY, int heading)
 {
     markRobotPosition(robotX, robotY);
 
@@ -327,7 +324,7 @@ void WallFollowing::updateOccupancyGrid(int robotX, int robotY, int heading)
     }
 }
 
-void WallFollowing::markFreeSpace(int startX, int startY, int endX, int endY)
+void MazeMapping::markFreeSpace(int startX, int startY, int endX, int endY)
 {
     int dx = abs(endX - startX);
     int dy = abs(endY - startY);
@@ -363,7 +360,7 @@ void WallFollowing::markFreeSpace(int startX, int startY, int endX, int endY)
 }
 
 
-void WallFollowing::markObstacle(int x, int y)
+void MazeMapping::markObstacle(int x, int y)
 {
     // Ensure the coordinates are within the grid bounds
     if (x >= 0 && x < GRID_SIZE_X && y >= 0 && y < GRID_SIZE_Y)
@@ -372,13 +369,13 @@ void WallFollowing::markObstacle(int x, int y)
     }
 }
 
-int WallFollowing::convertDistanceToGridBlock(float distance)
+int MazeMapping::convertDistanceToGridBlock(float distance)
 {
     return round(distance / GRID_CELL_SIZE);
 }
 
 // Helper function to update robot position in the grid
-void WallFollowing::updateRobotPosition(int &gridX, int &gridY, int heading, int blocksMoved)
+void MazeMapping::updateRobotPosition(int &gridX, int &gridY, int heading, int blocksMoved)
 {
     // Adjust grid coordinates based on heading and blocks moved
     switch (heading)
@@ -403,12 +400,12 @@ void WallFollowing::updateRobotPosition(int &gridX, int &gridY, int heading, int
 
 
 
-void WallFollowing::followLeftWall(float setDistance, float moveDistance, int buffer)
+void MazeMapping::MapThroughMaze(float setDistance, float moveDistance, int buffer)
 {
     int heading = 0;           // Initial heading is 0° (forward direction)
     int failureCounter = 0;    // Counter to track consecutive failures
     const int maxFailures = 3; // Maximum allowed failures before performing a 180 spin
-    int totalDistance = 1400;
+    int totalDistance = 1400; 
     int currentDistance = 0;
 
     int startX = 20;
@@ -427,6 +424,7 @@ void WallFollowing::followLeftWall(float setDistance, float moveDistance, int bu
         updateOccupancyGrid(gridX, gridY,heading);
         printOccupancyGrid();
 
+        _movement.alignToWall();
         Serial.println("----- Begin Loop -----");
         // Read sensor distances
         float frontRight = _frontRightIR.read();
@@ -456,7 +454,7 @@ void WallFollowing::followLeftWall(float setDistance, float moveDistance, int bu
             _movement.turnRight(90);
             heading = (heading + 90) % 360; // Update heading
             failureCounter = 0;
-            alignToWall();
+            _movement.alignToWall();
             continue;
         }
 
@@ -466,7 +464,7 @@ void WallFollowing::followLeftWall(float setDistance, float moveDistance, int bu
             _movement.turnLeft(90);
             heading = (heading - 90 + 360) % 360; // Update heading
             failureCounter = 0;
-            alignToWall();
+            _movement.alignToWall();
             continue;
         }
 
@@ -477,7 +475,7 @@ void WallFollowing::followLeftWall(float setDistance, float moveDistance, int bu
             moveForward(moveDistance, heading, currentDistance);
             updateRobotPosition(gridX, gridY, heading, convertDistanceToGridBlock(moveDistance)); // Update robot position by 1 block
             failureCounter = 0;
-            alignToWall();
+            _movement.alignToWall();
         }
         else if (shouldTurnLeft(heading, left, right, (moveDistance + buffer * 3)))
         {
@@ -495,7 +493,7 @@ void WallFollowing::followLeftWall(float setDistance, float moveDistance, int bu
                 _movement.turnLeft(90);
                 heading = (heading - 90 + 360) % 360; // Update heading
                 failureCounter = 0;
-                alignToWall();
+                _movement.alignToWall();
             }
             else
             {
@@ -520,7 +518,7 @@ void WallFollowing::followLeftWall(float setDistance, float moveDistance, int bu
                 _movement.turnRight(90);
                 heading = (heading + 90) % 360; // Update heading
                 failureCounter = 0;
-                alignToWall();
+                _movement.alignToWall();
             }
             else
             {
@@ -535,7 +533,7 @@ void WallFollowing::followLeftWall(float setDistance, float moveDistance, int bu
             moveForward(moveDistance, heading, currentDistance);
             updateRobotPosition(gridX, gridY, heading, convertDistanceToGridBlock(moveDistance)); // Update robot position by 1 block
             failureCounter = 0;
-            alignToWall();
+            _movement.alignToWall();
         }
         else
         {
@@ -549,21 +547,17 @@ void WallFollowing::followLeftWall(float setDistance, float moveDistance, int bu
             _movement.turnRight(180);
             heading = (heading + 180) % 360; // Update heading for 180-degree turn
             failureCounter = 0;
-            alignToWall();
+            _movement.alignToWall();
         }
 
         Serial.println("----- End Loop -----");
     }
 
+    // mark the end position of the robot
     occupancyGrid[gridX][gridY] = 2;
+    // mark the starting position on the map
+    // done here to stop it being overridden 
     occupancyGrid[startX][startY] = -2;
-    while (true)
-    {
-         printOccupancyGrid();
-         wait_us(10000000);
-    }
-    
-   
-    
+     
 }
 

@@ -10,7 +10,7 @@
 #define Left_Motor_dir P0_4
 #define Right_Motor_PWM P0_27
 #define Right_Motor_dir P0_5
-#define Default_pwm 0.4f
+#define Default_pwm 0.3f
 
 using namespace mbed;
 class Motor

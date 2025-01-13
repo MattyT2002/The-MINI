@@ -1,5 +1,5 @@
-#ifndef WALLFOLLOWING_H
-#define WALLFOLLOWING_H
+#ifndef MAZEMAPPING_H
+#define MAZEMAPPING_H
 
 #include "IRSensor.h"
 #include "MovementControl.h"
@@ -7,20 +7,22 @@
 #define GRID_SIZE_X 145
 #define GRID_SIZE_Y 200
 #define GRID_CELL_SIZE 10
-#define ROBOT_SIZE 150 // robot size in mm in length and width
-#define ROBOT_CELLS 15 // robot takes up a 3x3 grid size on the occupancy grd
+#define ROBOT_SIZE 150 // Robot size in mm (length and width)
+#define ROBOT_CELLS 15 // Robot takes up a 3x3 grid size on the occupancy grid
 
-#define GRID_FORWARD 0 // heading representing the direction the robot is facing and going in relation to the occupancy grid and the desired direction
+#define GRID_FORWARD 0    // Heading representing the direction the robot is facing in relation to the grid
 #define GRID_RIGHT 90
 #define GRID_BACKWARDS 180
 #define GRID_LEFT 270
-class WallFollowing
+
+class MazeMapping
 {
 public:
-    WallFollowing(MovementControl &movement, IR_sensor &leftSideIR, IR_sensor &rightSideIR, IR_sensor &frontLeftIR, IR_sensor &frontRightIR);
-    void followLeftWall(float setDistance, float moveDistance, int buffer);
+    MazeMapping(MovementControl &movement, IR_sensor &leftSideIR, IR_sensor &rightSideIR, IR_sensor &frontLeftIR, IR_sensor &frontRightIR);
+    void MapThroughMaze(float setDistance, float moveDistance, int buffer);
     void returnToStart();
     int occupancyGrid[GRID_SIZE_X][GRID_SIZE_Y];
+
 private:
     MovementControl &_movement;
     IR_sensor &_leftSideIR;   // Sensor for detecting left wall

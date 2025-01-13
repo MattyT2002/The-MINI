@@ -26,7 +26,7 @@ public:
     void turnLeft(int degrees);
     void turnRight(int degrees);
     void alignToWall();
-    void wallFollow(float wallDistance, float moveDistance, int buffer);
+    void MapThroughMaze(float wallDistance, float moveDistance, int buffer);
     void returnUsingMap();
 private:
     float getacrlength(float degrees);

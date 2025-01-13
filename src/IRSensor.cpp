@@ -33,7 +33,7 @@ float IR_sensor::read()
         printf("IR sensor command sent\n");
         
         // wait for sensor to take a reading 
-        wait_us(200000);
+        wait_us(20000);
 
         // read the results from the sensor reading
         if (i2c.read(_IR_addr, _cmd, 2) != 0) {
@@ -46,7 +46,8 @@ float IR_sensor::read()
         int rawValue = (_cmd[0] << 8) | _cmd[1];
         printf("Raw value: %d\n", rawValue);
 
-        // apply a quadratic equation calibrated for taking sensor reading in the maze to convert raw distance value into a millimeter distance reading 
+        // apply a quadratic equation calibrated (using python script) for taking sensor reading in the maze to convert 
+        //raw distance value into a millimeter distance reading 
         float distance = A * rawValue * rawValue + B * rawValue + C;
         
     

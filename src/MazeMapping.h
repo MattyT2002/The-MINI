@@ -19,7 +19,7 @@ class MazeMapping
 {
 public:
     MazeMapping(MovementControl &movement, IR_sensor &leftSideIR, IR_sensor &rightSideIR, IR_sensor &frontLeftIR, IR_sensor &frontRightIR);
-    void MapThroughMaze(float setDistance, float moveDistance, int buffer);
+    void MapThroughMaze(float moveDistance, int buffer, int startX, int startY);
     void returnToStart();
     int occupancyGrid[GRID_SIZE_X][GRID_SIZE_Y];
 
@@ -30,11 +30,10 @@ private:
     IR_sensor &_frontLeftIR;  // Sensor for detecting front-left obstacles
     IR_sensor &_frontRightIR; // Sensor for detecting front-right obstacles
 
-    bool canTurnLeft(float threshold);
-    bool canTurnRight(float threshold);
-    bool canMoveForward(float threshold);
+    bool canTurnLeft(float threshold, float leftDistance);
+    bool canTurnRight(float threshold, float rightDistance);
+    bool canMoveForward(float threshold, float frontLeft, float frontRight);
     bool shouldTurnLeft(int currentHeading, float leftIR, float rightIR, float threshold);
-    void alignToWall();
     void moveForward(float distance, int heading, int &currentDistance);
     void initialiseOccupancyGrid();
     void printOccupancyGrid();

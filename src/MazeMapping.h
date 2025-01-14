@@ -56,14 +56,15 @@ private:
     // add subtract the current distance value or keep it same if movement does not effect 
     // Y axis movement
     void moveForward(float distance, int heading, int &currentDistance);
-    // sets up Occupancy Grid so all grid squares are represented as unknown areas
+    // sets up Occupancy Grid so all grid squares are represented as unknown areas 
+    // and edges of the maze are set as obstacles
     void initialiseOccupancyGrid();
     // prints the occupancy Grid to the terminal in a way the user can interprate
     void printOccupancyGrid();
     // update the occupancy grid based of the robots current position and heading
     // marking the robots current position as free and marking what the sensors 
     // see as walls and the gap between sensor and wall as free space
-    void updateOccupancyGrid(int robotX, int robotY, int heading);
+    void updateOccupancyGrid(int robotX, int robotY, int heading, float frontLeftDistance, float frontRightDistance, float leftDistance, float rightDistance);
     // marks the robots current position in the maze onto the occupancy grind as free space
     void markRobotPosition(int robotX, int robotY);
     // mark an obstacle in the occupancy grid given a X Y coordinate value of the location
@@ -76,6 +77,11 @@ private:
     // update the robots new position in the maze based of the current position of the robot 
     // with heading it is moving and how many blocks it moved in that direction
     void updateRobotPosition(int &gridX, int &gridY, int heading, int blocksMoved);
+    // clean up map so that obstacles in the middle of free spaced are removed as they will be errors
+    void cleanUpMap();
+    // due to the walls having a minimum length of 8cm if two obstacles are detected withing 7 blocks of each other 
+    // in a stiright line then update the occpancy grid to fill that space with obstacles.
+    void fillInWalls();
 };
 
 #endif

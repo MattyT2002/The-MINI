@@ -18,7 +18,7 @@ void loop()
 {
     wait_us(3000000);
     // tell the robot to travers maze and map as it does so
-    movementControl.mapThroughMaze(100,55, 20, 20);
+    movementControl.mapThroughMaze(50,55, 20, 20);
     Serial.println("wall follow done");
      wait_us(20000000);
     //movementControl.returnUsingMap();

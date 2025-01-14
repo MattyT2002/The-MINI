@@ -257,7 +257,7 @@ void MovementControl::alignToWall()
         // if the robot is too far away from the wall stop due to sensors not being 
         // accurate enough to do wall alignment and could lead to it getting the robot
         // more out of line with the walls
-         if(leftDistance > 155 || rightDistance > 155){
+         if(leftDistance > 200 || rightDistance > 200){
             break;
         }
         

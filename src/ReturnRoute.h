@@ -12,7 +12,8 @@ public:
 
 private:
         MazeMapping &_mapInfo;
-        MovementControl &_movement;     
+        MovementControl &_movement; 
+        void fillInWalls();    
     
 };
 

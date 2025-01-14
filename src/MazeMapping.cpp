@@ -102,14 +102,21 @@ void MazeMapping::moveForward(float distance, int heading, int &currentDistance)
 }
 
 // sets up occupancy grid to have every grid size
-// to be set as -1 representing unknown.
+// to be set as -1 representing unknown and edges set to 1 representing obstacles.
 void MazeMapping::initialiseOccupancyGrid()
 {
     for (int x = 0; x < GRID_SIZE_X; x++)
     {
         for (int y = 0; y < GRID_SIZE_Y; y++)
         {
-            occupancyGrid[x][y] = -1; // Unknown
+            if (x == 0 || x == GRID_SIZE_X - 1 || y == 0 || y == GRID_SIZE_Y - 1)
+            {
+                occupancyGrid[x][y] = 1; // Edge obstacle
+            }
+            else
+            {
+                occupancyGrid[x][y] = -1; // Unknown
+            }
         }
     }
 }
@@ -176,16 +183,10 @@ void MazeMapping::markRobotPosition(int robotX, int robotY)
 
 // update the occupancy grid based of the robots X Y position heading
 // and uses sensor to mark walls in the maze
-void MazeMapping::updateOccupancyGrid(int robotX, int robotY, int heading)
+void MazeMapping::updateOccupancyGrid(int robotX, int robotY, int heading, float frontLeftDistance, float frontRightDistance, float leftDistance, float rightDistance)
 {
     // make the current position of the robot onto the grid
     markRobotPosition(robotX, robotY);
-
-    // get distance readings in millimetres from all of the sensor
-    float frontLeftDistance = _frontLeftIR.read();
-    float frontRightDistance = _frontRightIR.read();
-    float leftDistance = _leftSideIR.read();
-    float rightDistance = _rightSideIR.read();
 
     // convert the distance in millimetres from sensors into distance in occupancy grid blocks
     int blocksFromFrountLeftSensorToWall = convertDistanceToGridBlock(frontLeftDistance);
@@ -406,6 +407,60 @@ void MazeMapping::updateRobotPosition(int &gridX, int &gridY, int heading, int b
     markRobotPosition(gridX, gridY);
 }
 
+// if an obstacle is surrounded by free space mark the obstacle as free space as 
+// this must have been a sensor error
+void MazeMapping::cleanUpMap()
+{
+    for (int x = 1; x < GRID_SIZE_X - 1; x++)
+    {
+        for (int y = 1; y < GRID_SIZE_Y - 1; y++)
+        {
+            if (occupancyGrid[x][y] == 1)
+            {
+                // Check if the obstacle is surrounded by free space
+                if (occupancyGrid[x - 1][y] == 0 && occupancyGrid[x + 1][y] == 0 &&
+                    occupancyGrid[x][y - 1] == 0 && occupancyGrid[x][y + 1] == 0)
+                {
+                    occupancyGrid[x][y] = 0; // Change obstacle to free space
+                }
+            }
+        }
+    }
+}
+
+// Fill in the wall between two obstacle detections that are 1 to 7 blocks apart in a straight line
+void MazeMapping::fillInWalls()
+{
+    for (int x = 0; x < GRID_SIZE_X; x++)
+    {
+        for (int y = 0; y < GRID_SIZE_Y; y++)
+        {
+            // Check for horizontal gaps between obstacles
+            for (int gap = 1; gap <= 7; gap++)
+            {
+                if (x <= GRID_SIZE_X - gap - 1 && occupancyGrid[x][y] == 1 && occupancyGrid[x + gap + 1][y] == 1)
+                {
+                    for (int i = 1; i <= gap; i++)
+                    {
+                        occupancyGrid[x + i][y] = 1; // Fill in the gap
+                    }
+                }
+            }
+
+            // Check for vertical gaps between obstacles
+            for (int gap = 1; gap <= 7; gap++)
+            {
+                if (y <= GRID_SIZE_Y - gap - 1 && occupancyGrid[x][y] == 1 && occupancyGrid[x][y + gap + 1] == 1)
+                {
+                    for (int i = 1; i <= gap; i++)
+                    {
+                        occupancyGrid[x][y + i] = 1; // Fill in the gap
+                    }
+                }
+            }
+        }
+    }
+}
 /* will navigate through the Maze while recoding an occupancy grid of the maze
 given a set move distance for the robot to move each time and a buffer to
 add on to move distance to make a distance needed to been seen by sensors
@@ -438,9 +493,8 @@ void MazeMapping::mapThroughMaze(float moveDistance, int buffer, int startX, int
     while (totalDistance > currentDistance)
     {
         
-        
-
-        // use front sensors to align front of the robot with the wall
+        printOccupancyGrid();
+        wait_us(1000000);
         _movement.alignToWall();
 
         // Read all sensor distances in milimeters
@@ -449,11 +503,12 @@ void MazeMapping::mapThroughMaze(float moveDistance, int buffer, int startX, int
         float left = _leftSideIR.read();
         float right = _rightSideIR.read();
         // Update occupancy grid with the current robot position
-        updateOccupancyGrid(gridX, gridY, heading);
+        updateOccupancyGrid(gridX, gridY, heading, frontLeft, frontRight, left, right);
         // Detect corner cases
-        bool cornerDetectedLeft = (frontRight < moveDistance + buffer && left < moveDistance + buffer * 3);
-        bool cornerDetectedRight = (frontRight < moveDistance + buffer && right < moveDistance + buffer * 3);
+        bool cornerDetectedLeft = (frontRight < 100 + buffer && left < 100 + buffer * 3);
+        bool cornerDetectedRight = (frontRight < 100 + buffer && right < 100 + buffer * 3);
 
+        // deal with corrner edge case
         if (cornerDetectedLeft)
         {
             Serial.println("Corner detected! Turning right...");
@@ -467,10 +522,11 @@ void MazeMapping::mapThroughMaze(float moveDistance, int buffer, int startX, int
             left = _leftSideIR.read();
             right = _rightSideIR.read();
             // updare occupancy grid
-            updateOccupancyGrid(gridX, gridX,heading);
+            updateOccupancyGrid(gridX, gridX,heading, frontLeft, frontRight, left, right);
             continue;
         }
 
+        // deal with corrner edge case
         if (cornerDetectedRight)
         {
             Serial.println("Corner detected! Turning left...");
@@ -484,7 +540,7 @@ void MazeMapping::mapThroughMaze(float moveDistance, int buffer, int startX, int
             left = _leftSideIR.read();
             right = _rightSideIR.read();
             // updare occupancy grid
-            updateOccupancyGrid(gridX, gridX,heading);
+            updateOccupancyGrid(gridX, gridX,heading, frontLeft, frontRight, left, right);
             continue;
         }
 
@@ -497,17 +553,18 @@ void MazeMapping::mapThroughMaze(float moveDistance, int buffer, int startX, int
             moveForward(moveDistance, heading, currentDistance);
             // update the robots position in the occupancy grid based on
             // the movement that just took place
-            updateRobotPosition(gridX, gridY, heading, convertDistanceToGridBlock(moveDistance)); // Update robot position by 1 block
+            updateRobotPosition(gridX, gridY, heading, convertDistanceToGridBlock(moveDistance)); 
             // after movement take new sensor reading
             frontRight = _frontRightIR.read();
             frontLeft = _frontLeftIR.read();
             left = _leftSideIR.read();
             right = _rightSideIR.read();
             // updare occupancy grid
-            updateOccupancyGrid(gridX, gridX,heading);
+            updateOccupancyGrid(gridX, gridX,heading, frontLeft, frontRight, left, right);
             // reset the failure counter due to moving forward instead of turning
             failureCounter = 0;
             _movement.alignToWall();
+             continue;
         }
         // find out if the robot should move left or right in order
         // to get around wall or to turn back to 0 heading
@@ -515,20 +572,20 @@ void MazeMapping::mapThroughMaze(float moveDistance, int buffer, int startX, int
         {
             // if can move forward move forward before turning
             // to make sure the robot is clear of the wall to the left
-            if (canMoveForward(moveDistance + buffer, frontLeft, frontRight))
+            if (canMoveForward(100 + buffer, frontLeft, frontRight) && canTurnLeft(moveDistance + buffer*2,left))
             {
                 // move forward to clear wall
-                moveForward(moveDistance, heading, currentDistance);
+                moveForward(100, heading, currentDistance);
                 // update the robots position in the occupancy grid based on
                 // the movement that just took place
-                updateRobotPosition(gridX, gridY, heading, convertDistanceToGridBlock(moveDistance)); // Update robot position by 1 block
+                updateRobotPosition(gridX, gridY, heading, convertDistanceToGridBlock(100)); // Update robot position by 1 block
                 // after movement take new sensor reading
                 frontRight = _frontRightIR.read();
                 frontLeft = _frontLeftIR.read();
                 left = _leftSideIR.read();
                 right = _rightSideIR.read();
                 // updare occupancy grid
-                updateOccupancyGrid(gridX, gridX,heading);
+                updateOccupancyGrid(gridX, gridX,heading, frontLeft, frontRight, left, right);
                 // reset the failure counter due to moving forward instead of turning
                 failureCounter = 0;
                 _movement.alignToWall();
@@ -546,7 +603,7 @@ void MazeMapping::mapThroughMaze(float moveDistance, int buffer, int startX, int
                     left = _leftSideIR.read();
                     right = _rightSideIR.read();
                     // updare occupancy grid
-                    updateOccupancyGrid(gridX, gridX, heading);
+                    updateOccupancyGrid(gridX, gridX, heading, frontLeft, frontRight, left, right);
                     // reset failure counter
                     failureCounter = 0;
                     // align to the wall infront
@@ -566,19 +623,19 @@ void MazeMapping::mapThroughMaze(float moveDistance, int buffer, int startX, int
                 {
                     // if can move forward move forward before turning
                     // to make sure the robot is clear of the wall to the right
-                    if (canMoveForward(moveDistance + buffer, frontLeft, frontRight))
+                    if (canMoveForward(100 + buffer, frontLeft, frontRight))
                     {
                         // move forward to clear the wall
-                        moveForward(moveDistance, heading, currentDistance);
+                        moveForward(100, heading, currentDistance);
                         // update the robots position in the occupancy grid based on
                         // the movement that just took place
-                        updateRobotPosition(gridX, gridY, heading, convertDistanceToGridBlock(moveDistance)); // Update robot position by 1 block
+                        updateRobotPosition(gridX, gridY, heading, convertDistanceToGridBlock(100)); // Update robot position by 1 block
                         frontRight = _frontRightIR.read();
                         frontLeft = _frontLeftIR.read();
                         left = _leftSideIR.read();
                         right = _rightSideIR.read();
                         // updare occupancy grid
-                        updateOccupancyGrid(gridX, gridX, heading);
+                        updateOccupancyGrid(gridX, gridX, heading, frontLeft, frontRight, left, right);
                         // reset failure count
                         failureCounter = 0; // Reset failure counter
                     }
@@ -593,7 +650,7 @@ void MazeMapping::mapThroughMaze(float moveDistance, int buffer, int startX, int
                     left = _leftSideIR.read();
                     right = _rightSideIR.read();
                     // updare occupancy grid
-                    updateOccupancyGrid(gridX, gridX,heading);
+                    updateOccupancyGrid(gridX, gridX,heading, frontLeft, frontRight, left, right);
                     // reset failure count
                     failureCounter = 0;
                     // align to wall
@@ -619,7 +676,7 @@ void MazeMapping::mapThroughMaze(float moveDistance, int buffer, int startX, int
                 left = _leftSideIR.read();
                 right = _rightSideIR.read();
                 // updare occupancy grid
-                updateOccupancyGrid(gridX, gridX,heading);
+                updateOccupancyGrid(gridX, gridX,heading, frontLeft, frontRight, left, right);
                 failureCounter = 0;
                 _movement.alignToWall();
             }
@@ -642,11 +699,15 @@ void MazeMapping::mapThroughMaze(float moveDistance, int buffer, int startX, int
             }
         }
     
-    while (true)
-    {
+    
+    
+    
         printOccupancyGrid();
         wait_us(5000000);
-    }
+        cleanUpMap();
+        fillInWalls();
+        printOccupancyGrid();
+        wait_us(10000000);
     
     // mark the end position of the robot
     occupancyGrid[gridX][gridY] = 2;

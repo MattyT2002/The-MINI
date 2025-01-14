@@ -20,25 +20,24 @@ float IR_sensor::read()
    
         // select the multiplex address 
         if (i2c.write(_mux_addr, &_mux_cmd, 1) != 0) {
-            printf("Error: Failed to write to multiplexer\n");
-            return -1.0f; // return error if failed to communicate to the multiplex
-        }
-        printf("Multiplexer channel selected\n");
+            // return error if failed to communicate to the multiplex
         
+            return -1.0f; 
+        }
         // send command to the IR sensor to take a reading
         if (i2c.write(_IR_addr, _cmd, 1) != 0) {
-            printf("Error: Failed to write to IR sensor\n");
-            return -1.0f; // return error if command fails
+            
+            // return error if command fails
+            return -1.0f; 
+       
         }
-        printf("IR sensor command sent\n");
-        
         // wait for sensor to take a reading 
         wait_us(20000);
 
         // read the results from the sensor reading
         if (i2c.read(_IR_addr, _cmd, 2) != 0) {
-            printf("Error: Failed to read from IR sensor\n");
-            return -1.0f; // return error if cannot read sensor
+            // return error if cannot read sensor
+            return -1.0f; 
         }
         
 
@@ -46,9 +45,10 @@ float IR_sensor::read()
         int rawValue = (_cmd[0] << 8) | _cmd[1];
         printf("Raw value: %d\n", rawValue);
 
-        // apply a quadratic equation calibrated (using python script) for taking sensor reading in the maze to convert 
+        // apply a quadratic equation calibrated (from python script) for taking sensor reading in the maze to convert 
         //raw distance value into a millimeter distance reading 
         float distance = A * rawValue * rawValue + B * rawValue + C;
+        
         
     
 

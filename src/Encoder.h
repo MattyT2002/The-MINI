@@ -6,7 +6,7 @@ using namespace mbed;
 
 
 #define DISTANCE_PER_TICK 0.1142
-// pins reffrance for each encoder
+// pins references for each encoder
 #define RIGHT_ENCODER_A P1_15
 #define RIGHT_ENCODER_B P1_11
 #define LEFT_ENCODER_A P1_12

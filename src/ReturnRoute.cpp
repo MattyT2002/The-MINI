@@ -17,11 +17,9 @@ ReturnRoute::ReturnRoute(MazeMapping &mapInfo, MovementControl &movment)
 
 void ReturnRoute::ReturnToStart()
 {
-    Serial.print(_mapInfo.occupancyGrid[20][20]);
+    
     _movement.turnRight(180);
     int heading = 0;
-
+    int x = 20, y = 20; // Assuming the robot starts at (20, 20)
     
-
 }
-

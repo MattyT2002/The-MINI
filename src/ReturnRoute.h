@@ -13,7 +13,7 @@ public:
 private:
         MazeMapping &_mapInfo;
         MovementControl &_movement; 
-        void fillInWalls();    
+        
     
 };
 

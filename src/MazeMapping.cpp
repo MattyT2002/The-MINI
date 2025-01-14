@@ -111,11 +111,13 @@ void MazeMapping::initialiseOccupancyGrid()
         {
             if (x == 0 || x == GRID_SIZE_X - 1 || y == 0 || y == GRID_SIZE_Y - 1)
             {
-                occupancyGrid[x][y] = 1; // Edge obstacle
+                // Edge obstacle
+                occupancyGrid[x][y] = 1; 
             }
             else
             {
-                occupancyGrid[x][y] = -1; // Unknown
+                // Unknown
+                occupancyGrid[x][y] = -1; 
             }
         }
     }
@@ -125,32 +127,37 @@ void MazeMapping::initialiseOccupancyGrid()
 void MazeMapping::printOccupancyGrid()
 {
     Serial.println("Occupancy Grid:");
-    for (int y = GRID_SIZE_Y - 1; y >= 0; y--) // Start from the top row
+    for (int y = GRID_SIZE_Y - 1; y >= 0; y--) 
     {
         for (int x = 0; x < GRID_SIZE_X; x++)
         {
             if (occupancyGrid[x][y] == -1)
             {
-                Serial.print(" ?"); // represents Unknown space
+                // represents Unknown space
+                Serial.print(" ? "); 
             }
             else if (occupancyGrid[x][y] == 1)
             {
-                Serial.print(" #"); // represents Obstacle
+                // represents Obstacle
+                Serial.print(" # "); 
             }
             else if (occupancyGrid[x][y] == 2)
             {
-                Serial.print("X"); // end position of the robot
+                // end position of the robot
+                Serial.print("X ");
             }
             else if (occupancyGrid[x][y] == -2)
             {
-                Serial.print("S"); // starting position of the robot
+                // starting position of the robot
+                Serial.print(" S "); 
             }
             else
             {
-                Serial.print(" ."); // represents Free space
+                // represents Free space
+                Serial.print(" . "); 
             }
         }
-        Serial.println(); // Move to the next row
+        Serial.println(); 
     }
 }
 
@@ -181,7 +188,7 @@ void MazeMapping::markRobotPosition(int robotX, int robotY)
     }
 }
 
-// update the occupancy grid based of the robots X Y position heading
+// update the occupancy grid based of the robots X Y position and heading
 // and uses sensor to mark walls in the maze
 void MazeMapping::updateOccupancyGrid(int robotX, int robotY, int heading, float frontLeftDistance, float frontRightDistance, float leftDistance, float rightDistance)
 {
@@ -318,49 +325,32 @@ void MazeMapping::updateOccupancyGrid(int robotX, int robotY, int heading, float
     }
 }
 
-// mark the blocks on the occupancy grid in a strieght line between 2
+// mark the blocks on the occupancy grid in a straight line between 2
 // blocks on the grid
 void MazeMapping::markFreeSpace(int startX, int startY, int endX, int endY)
 {
-    // calculte the change in x and y between the start and end of the free space
-    int dx = abs(endX - startX);
-    int dy = abs(endY - startY);
-    // figure out which direction you are heading in both x and y axies
-    int sx = (startX < endX) ? 1 : -1;
-    int sy = (startY < endY) ? 1 : -1;
-    // error term which will be used for smoothing lines
-    int err = 2 * (dx - dy);
-
-    while (true)
+    // Check if the line is horizontal
+    if (startY == endY)
     {
-        // check if current block is the end block
-        if (startX == endX && startY == endY)
+        // Mark all blocks between startX and endX as free space, except the last block
+        for (int x = min(startX, endX); x < max(startX, endX); x++)
         {
-            // exit due to reaching the end block
-            break;
+            if (x >= 0 && x < GRID_SIZE_X && startY >= 0 && startY < GRID_SIZE_Y)
+            {
+                occupancyGrid[x][startY] = 0; // Mark as free space
+            }
         }
-        // make sure the current block is in the occupancy grid
-        if (startX >= 0 && startX < GRID_SIZE_X && startY >= 0 && startY < GRID_SIZE_Y)
+    }
+    // Check if the line is vertical
+    else if (startX == endX)
+    {
+        // Mark all blocks between startY and endY as free space, except the last block
+        for (int y = min(startY, endY); y < max(startY, endY); y++)
         {
-            occupancyGrid[startX][startY] = 0; // Mark as free space
-        }
-        // create a double error term used for comparision
-        int e2 = 2 * err;
-        // if error*2 is grater than total -Y direction then we need to move in X
-        if (e2 > -dy)
-        {
-            // adjust error term
-            err -= dy;
-            // move one block in the x direction
-            startX += sx;
-        }
-        // if total X direction is grater than error*2 them we meed to move in Y
-        if (e2 < dx)
-        {
-            // adjust error term
-            err += dx;
-            // move one block in the Y direction
-            startY += sy;
+            if (startX >= 0 && startX < GRID_SIZE_X && y >= 0 && y < GRID_SIZE_Y)
+            {
+                occupancyGrid[startX][y] = 0; // Mark as free space
+            }
         }
     }
 }
@@ -482,6 +472,7 @@ void MazeMapping::mapThroughMaze(float moveDistance, int buffer, int startX, int
     int gridX = startX; // Initial x-coordinate
     int gridY = startY; // Initial y-coordinate
     // set all the blocks in the occupancy grid to unknown
+    // and makes the edges of the mazes as obstacles
     initialiseOccupancyGrid();
 
     // Mark initial robot position
@@ -493,8 +484,7 @@ void MazeMapping::mapThroughMaze(float moveDistance, int buffer, int startX, int
     while (totalDistance > currentDistance)
     {
         
-        printOccupancyGrid();
-        wait_us(1000000);
+        
         _movement.alignToWall();
 
         // Read all sensor distances in milimeters
@@ -508,7 +498,7 @@ void MazeMapping::mapThroughMaze(float moveDistance, int buffer, int startX, int
         bool cornerDetectedLeft = (frontRight < 100 + buffer && left < 100 + buffer * 3);
         bool cornerDetectedRight = (frontRight < 100 + buffer && right < 100 + buffer * 3);
 
-        // deal with corrner edge case
+        // deal with left corrner edge case
         if (cornerDetectedLeft)
         {
             Serial.println("Corner detected! Turning right...");
@@ -526,7 +516,7 @@ void MazeMapping::mapThroughMaze(float moveDistance, int buffer, int startX, int
             continue;
         }
 
-        // deal with corrner edge case
+        // deal with right corrner edge case
         if (cornerDetectedRight)
         {
             Serial.println("Corner detected! Turning left...");
@@ -591,7 +581,7 @@ void MazeMapping::mapThroughMaze(float moveDistance, int buffer, int startX, int
                 _movement.alignToWall();
             }
                 // if enough room to the left of the robot
-                if (canTurnLeft(moveDistance + buffer * 2, left)){
+                if (canTurnLeft(moveDistance + buffer * 3, left)){
 
                     // turn left 90 degrees
                     _movement.turnLeft(90);
@@ -699,19 +689,20 @@ void MazeMapping::mapThroughMaze(float moveDistance, int buffer, int startX, int
             }
         }
     
+        // mark the end position of the robot
+        occupancyGrid[gridX][gridY] = 2;
+        // mark the starting position on the map
+        // done here to stop it being overridden
+        occupancyGrid[startX][startY] = -2;
     
-    
-    
+       
         printOccupancyGrid();
-        wait_us(5000000);
+        wait_us(2000000);
         cleanUpMap();
         fillInWalls();
+        wait_us(2000000);
         printOccupancyGrid();
-        wait_us(10000000);
+        
     
-    // mark the end position of the robot
-    occupancyGrid[gridX][gridY] = 2;
-    // mark the starting position on the map
-    // done here to stop it being overridden
-    occupancyGrid[startX][startY] = -2;
+   
 }

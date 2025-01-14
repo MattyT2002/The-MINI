@@ -9,7 +9,7 @@ using namespace mbed;
 #define FRONT_RIGHT 0x01
 #define SIDE_RIGHT 0x04
 #define SIDE_LEFT 0x08
-// coefficients for the quadratic equation for converting raw value to distance in milimeters
+// coefficients for the quadratic equation for converting raw value to distance in millimetres
 // calibrated specifically for the mazes walls 
 #define A -2.813e-8
 #define B 0.0105
@@ -17,7 +17,7 @@ using namespace mbed;
 class IR_sensor
 {
 public:
-    // sensor constructor
+    // sensor constructor pass in the command to set the multiplexer to read where this sesnor is connected
     IR_sensor(char mux_cmd);
     // return a millimetre distance reading from the sensor 
     float read();
